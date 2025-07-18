@@ -1,0 +1,57 @@
+name: Manual PaperTS Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      api-version:
+        description: "Paper API version (e.g., 1.21.4)"
+        required: true
+        type: string
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Update api-version in plugin.yml
+        run: |
+          api_version="${{ github.event.inputs.api-version }}"
+          sed -i "s/^api-version: .*/api-version: $api_version/" app/src/main/resources/plugin.yml
+
+      - name: Get plugin version from plugin.yml
+        id: get_version
+        run: |
+          version=$(grep '^version:' app/src/main/resources/plugin.yml | awk '{print $2}')
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Build with shadowJar
+        run: ./gradlew :app:shadowJar --no-daemon
+
+      - name: Create release tag
+        id: create_tag
+        run: |
+          version=${{ steps.get_version.outputs.version }}
+          api_version="${{ github.event.inputs.api-version }}"
+          tag="v${version}-PAPER-${api_version}"
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag "$tag"
+          git push origin "$tag"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.create_tag.outputs.tag }}
+          name: Release ${{ steps.create_tag.outputs.tag }}
+          files: app/build/libs/PaperTs.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
