@@ -1,4 +1,4 @@
-name: Manual PaperTS Release
+name: "🚀 Manual PaperTS Release"
 
 permissions:
   contents: write
@@ -15,30 +15,30 @@ jobs:
   build-and-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: "📦 Checkout repository"
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: "☕ Set up JDK 17"
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "21"
 
-      - name: Update api-version in plugin.yml
+      - name: "📝 Update api-version in plugin.yml"
         run: |
           api_version="${{ github.event.inputs.api-version }}"
           sed -i "s/^api-version: .*/api-version: $api_version/" app/src/main/resources/plugin.yml
 
-      - name: Get plugin version from plugin.yml
+      - name: "🔍 Get plugin version from plugin.yml"
         id: get_version
         run: |
           version=$(grep '^version:' app/src/main/resources/plugin.yml | awk '{print $2}')
           echo "version=$version" >> $GITHUB_OUTPUT
 
-      - name: Build with shadowJar
+      - name: "🏗️ Build with shadowJar"
         run: ./gradlew :app:shadowJar --no-daemon
 
-      - name: Delete existing release and tag if they exist
+      - name: "🧹 Delete existing release and tag if they exist"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -55,7 +55,7 @@ jobs:
             git tag -d "$tag"
           fi
 
-      - name: Create release tag
+      - name: "🏷️ Create release tag"
         id: create_tag
         run: |
           version=${{ steps.get_version.outputs.version }}
@@ -67,7 +67,7 @@ jobs:
           git tag "$tag"
           git push origin "$tag"
 
-      - name: Create GitHub Release
+      - name: "🚀 Create GitHub Release"
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.create_tag.outputs.tag }}
