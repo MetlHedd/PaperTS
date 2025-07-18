@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+repositories {
+    // Use Maven Central for resolving dependencies.
+    mavenCentral()
+    maven {
+        name = 'papermc'
+        url = 'https://repo.papermc.io/repository/maven-public/'
+    }
+}
+
+dependencies {
+    // This dependency is used by the application.
+    implementation libs.guava
+
+    compileOnly 'io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT'
+
+    implementation 'com.caoccao.javet:javet:4.1.5'
+    implementation 'com.caoccao.javet:javet-node-linux-arm64:4.1.5'
+    implementation 'com.caoccao.javet:javet-node-linux-x86_64:4.1.5'
+    implementation 'com.caoccao.javet:javet-node-windows-x86_64:4.1.5'
+}
+
+jar {
+    archiveBaseName = "PaperTs" // The name of your plugin JAR
+    archiveClassifier = "paper"
+}
+
+shadowJar {
+    mergeServiceFiles()
+
+    archiveClassifier.set("") // Remove the -all or -shadow classifier
+    archiveBaseName = "PaperTs"
+}

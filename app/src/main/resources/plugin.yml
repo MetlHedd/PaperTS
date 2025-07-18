@@ -1,0 +1,4 @@
+name: PaperTS
+version: 1.0.0
+main: dev.metlhedd.paperts.PaperTSPlugin
+api-version: 1.21.4
