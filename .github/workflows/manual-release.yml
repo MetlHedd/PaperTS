@@ -38,6 +38,23 @@ jobs:
       - name: Build with shadowJar
         run: ./gradlew :app:shadowJar --no-daemon
 
+      - name: Delete existing release and tag if they exist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(grep '^version:' app/src/main/resources/plugin.yml | awk '{print $2}')
+          api_version="${{ github.event.inputs.api-version }}"
+          tag="v${version}-PAPER-${api_version}"
+          # Delete release if exists
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release delete "$tag" --repo "$GITHUB_REPOSITORY" --yes
+          fi
+          # Delete tag if exists
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            git push --delete origin "$tag"
+            git tag -d "$tag"
+          fi
+
       - name: Create release tag
         id: create_tag
         run: |
