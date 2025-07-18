@@ -42,15 +42,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          version=$(grep '^version:' app/src/main/resources/plugin.yml | awk '{print $2}')
+          version="${{ steps.get_version.outputs.version }}"
           api_version="${{ github.event.inputs.api-version }}"
           tag="v${version}-PAPER-${api_version}"
           # Delete release if exists
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             gh release delete "$tag" --repo "$GITHUB_REPOSITORY" --yes
           fi
-          # Delete tag if exists
-          if git rev-parse "$tag" >/dev/null 2>&1; then
+          # Delete tag if exists (both remote and local)
+          if git ls-remote --tags origin | grep -q "refs/tags/$tag"; then
+            git push --delete origin "$tag"
+          fi
+          if git tag | grep -q "^$tag$"; then
             git push --delete origin "$tag"
             git tag -d "$tag"
           fi
