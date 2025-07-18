@@ -45,17 +45,26 @@ jobs:
           version="${{ steps.get_version.outputs.version }}"
           api_version="${{ github.event.inputs.api-version }}"
           tag="v${version}-PAPER-${api_version}"
+          echo "Checking for existing release and tag: $tag"
           # Delete release if exists
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "Release $tag exists. Deleting..."
             gh release delete "$tag" --repo "$GITHUB_REPOSITORY" --yes
+          else
+            echo "No existing release for $tag."
           fi
           # Delete tag if exists (both remote and local)
           if git ls-remote --tags origin | grep -q "refs/tags/$tag"; then
+            echo "Remote tag $tag exists. Deleting from origin..."
             git push --delete origin "$tag"
+          else
+            echo "No remote tag $tag found."
           fi
           if git tag | grep -q "^$tag$"; then
-            git push --delete origin "$tag"
+            echo "Local tag $tag exists. Deleting locally..."
             git tag -d "$tag"
+          else
+            echo "No local tag $tag found."
           fi
 
       - name: "🏷️ Create release tag"
