@@ -1,5 +1,8 @@
 name: Manual PaperTS Release
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
     inputs:
