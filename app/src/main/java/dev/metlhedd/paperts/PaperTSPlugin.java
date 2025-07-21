@@ -64,25 +64,35 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
     // Loop through directories in the data folder, and enable it as a module
     for (File file : serverRootFolder.listFiles()) {
       if (file.isDirectory() && new File(file, "package.json").exists()) {
-        try {
-          Path path = file.toPath();
-          pool.initRuntime(path);
-          pool.startRuntime(path);
+        new Thread(() -> {
+          try {
+            Path path = file.toPath();
+            pool.initRuntime(path);
+            pool.startRuntime(path);
 
-          getLogger().info("Module initialized: " + file.getName());
-        } catch (Exception e) {
-          getLogger().severe("Failed to initialize module at " + file.getName() + ": " + e.getMessage());
-          e.printStackTrace();
-        }
+            getLogger().info("Module initialized: " + file.getName());
+          } catch (Exception e) {
+            getLogger().severe("Failed to initialize module at " + file.getName() + ": " + e.getMessage());
+            e.printStackTrace();
+          }
+        }).start();
       }
     }
   }
 
   public void loadModule(String moduleName) throws JavetException, IOException {
-    Path modulePath = getDataFolder().toPath().resolve(moduleName);
+    new Thread(() -> {
+      try {
+        Path modulePath = getDataFolder().toPath().resolve(moduleName);
 
-    pool.initRuntime(modulePath);
-    pool.startRuntime(modulePath);
+        pool.initRuntime(modulePath);
+        pool.startRuntime(modulePath);
+      } catch (Exception e) {
+        getLogger().severe("Failed to load module " + moduleName + ": " + e.getMessage());
+        e.printStackTrace();
+      }
+
+    }).start();
   }
 
   public void unloadModule(String moduleName) throws JavetException {
