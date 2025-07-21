@@ -115,3 +115,10 @@ The output JAR will be in `app/build/libs/`.
 
 Contributions are welcome! Please open issues or pull requests for bug fixes, features, or documentation improvements.
 
+## Inspiration
+
+Some projects that inspired PaperTS:
+- [Grakkit](https://github.com/grakkit/grakkit)
+- [Javet](https://github.com/caoccao/Javet)
+- [Custom Realms](https://github.com/customrealms)
+- [CraftJS](https://github.com/Dysfold/craftjs)
