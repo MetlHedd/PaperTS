@@ -32,7 +32,6 @@ jobs:
 
       - name: "🛠️ Update PaperMC API version in build.gradle"
         run: |
-          run: |
           api_version="${{ github.event.inputs.api-version }}"
           echo "Updating PaperMC API version in app/build.gradle to $api_version"
           sed -i "s|io.papermc.paper:paper-api:[^'-]*-R0.1-SNAPSHOT|io.papermc.paper:paper-api:${api_version}-R0.1-SNAPSHOT|" app/build.gradle
