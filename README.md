@@ -93,6 +93,7 @@ Your `package.json` should look like this:
 
 You can use the following commands to manage your PaperTS modules:
 - `/paperts reload`: Reloads all modules.
+- `/paperts reload <module>`: Reloads a specific module.
 - `/paperts list`: Lists all loaded modules.
 - `/paperts unload <module>`: Unloads a specific module.
 - `/paperts load <module>`: Loads a specific module.
