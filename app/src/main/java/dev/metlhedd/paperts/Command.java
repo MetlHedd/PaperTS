@@ -32,14 +32,13 @@ public class Command extends BukkitCommand {
           sender.sendMessage("Reloading PaperTS modules...");
 
           try {
-            plugin.reloadModule(args[1]);
-            sender.sendMessage("Modules reloaded successfully.");
+            plugin.reloadAllModules();
           } catch (Exception e) {
             sender.sendMessage("Failed to reload modules: " + e.getMessage());
+            e.printStackTrace();
             return false;
           }
 
-          // Call the reload logic here
           return true;
         case "list":
           sender.sendMessage("Listing PaperTS modules...");
@@ -86,6 +85,19 @@ public class Command extends BukkitCommand {
             sender.sendMessage("Module unloaded successfully.");
           } catch (Exception e) {
             sender.sendMessage("Failed to unload module: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+          }
+
+          return true;
+        case "reload":
+          sender.sendMessage("Reloading PaperTS modules...");
+
+          try {
+            plugin.reloadModule(args[1]);
+            sender.sendMessage("Modules reloaded successfully.");
+          } catch (Exception e) {
+            sender.sendMessage("Failed to reload modules: " + e.getMessage());
             e.printStackTrace();
             return false;
           }

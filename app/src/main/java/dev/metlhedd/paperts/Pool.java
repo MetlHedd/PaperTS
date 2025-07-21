@@ -230,11 +230,6 @@ public class Pool {
       releaseRuntime(path);
     }
 
-    this.javetEnginePool.close();
-    this.javetEngine.clear();
-    this.runtimes.clear();
-    this.workingDirectories.clear();
-
     System.gc();
   }
 
