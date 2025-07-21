@@ -148,7 +148,6 @@ public class Pool {
     // Check if the runtime exists before releasing it
     if (this.runtimes.containsKey(path)) {
       V8Runtime runtime = this.runtimes.get(path);
-      IJavetEngine<V8Runtime> engine = this.javetEngine.get(path);
       JavetJVMInterceptor javetJVMInterceptor = this.javetJVMInterceptors.get(path);
       Globals globals = this.globalsMap.get(path);
 
@@ -157,8 +156,7 @@ public class Pool {
       globals.unregisterAllCommands();
       runtime.await();
       javetJVMInterceptor.unregister(runtime.getGlobalObject());
-      engine.resetContext();
-      this.javetEnginePool.releaseEngine(engine);
+      runtime.lowMemoryNotification();
 
       // Remove the runtime and engine from the maps
       this.runtimes.remove(path);
