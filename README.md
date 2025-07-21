@@ -34,10 +34,68 @@ PaperTS is a Paper Minecraft plugin that enables you to write Minecraft server p
 4. **Example `index.js`**:
     ```js
     // Access PaperTS global for event/command registration
-    PaperTS.registerEvent('PlayerJoinEvent', (event) => {
-      PaperTS.sendMessage(event.getPlayer(), 'Welcome to the server!');
+    PaperTS.registerEvent(org.bukkit.event.player.PlayerJoinEvent, (event) => {
+      PaperTS.sendMessage(event.player.name, 'Welcome to the server!');
     });
     ```
+5. Start your Paper server. PaperTS will automatically load your module. You can reload the modules any time using the `/paperts reload` command.
+
+### Using typescript
+
+To use TypeScript, you can set up a `tsconfig.json` in your module directory:
+
+```json
+{
+  "compilerOptions": {
+    "incremental": true,
+    "module": "commonjs",
+    "esModuleInterop": false,
+    "strict": true,
+    "outDir": "./dist",
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "typeRoots": [
+      "node_modules/paperts-java-ts-bind"
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ]
+}
+```
+
+Install the necessary depedencies in your module directory:
+
+```sh
+npm install --save github:MetlHedd/java-ts-bind#1.21.4-R0.1-SNAPSHOT
+```
+
+You can substitute the version, with another version of the `paperts-java-ts-bind` package, if you want to use a different version. You can also request another version by opening an issue on this repository.
+
+Then, you can write your TypeScript code in the `src` directory and compile it to JavaScript in the `dist` directory.
+
+Your `package.json` should look like this:
+
+```json
+{
+  "main": "dist/index.js",
+  "scripts": {
+    "watch": "tsc --project . --watch"
+  },
+  "dependencies": {
+    "paperts-java-ts-bind": "github:MetlHedd/java-ts-bind#1.21.4-R0.1-SNAPSHOT",
+    "typescript": "^5.8.3"
+  }
+}
+```
+
+### Plugin Commands
+
+You can use the following commands to manage your PaperTS modules:
+- `/paperts reload`: Reloads all modules.
+- `/paperts list`: Lists all loaded modules.
+- `/paperts unload <module>`: Unloads a specific module.
+- `/paperts load <module>`: Loads a specific module.
 
 ## Development
 
