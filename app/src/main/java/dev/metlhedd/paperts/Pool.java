@@ -100,7 +100,12 @@ public class Pool {
 
     runtime.setConverter(proxyConverter);
     javetJVMInterceptor.register(runtime.getGlobalObject());
+
     runtime.getGlobalObject().set("PaperTS", globals);
+
+    // Set the global objects for the runtime
+    runtime.getExecutor("let org = javet.package.org").executeVoid();
+    runtime.getExecutor("let java = javet.package.java").executeVoid();
 
     this.runtimes.put(path, runtime);
     this.javetEngine.put(path, javetEngine);
@@ -108,7 +113,24 @@ public class Pool {
     this.workingDirectories.put(path, workingDirectory);
     this.globalsMap.put(path, globals);
 
-    setupNodeModules(path);
+    this.setupNodeModules(path);
+
+    // Setup required function
+    runtime
+        .getExecutor(
+            """
+                const Module = require("module");
+                const originalRequire = Module.prototype.require;
+
+                Module.prototype.require = function () {
+                  if (arguments.length === 1 && typeof arguments[0] === "string" && (arguments[0].startsWith("org") || arguments[0].startsWith("java"))) {
+                    return javet.package[arguments[0]];
+                  }
+
+                  return originalRequire.apply(this, arguments);
+                };
+                """)
+        .executeVoid();
   }
 
   /**
@@ -187,7 +209,7 @@ public class Pool {
     WorkingDirectory workingDirectory = this.workingDirectories.get(path);
 
     // Execute the index script in the runtime
-    runtime.getExecutor(workingDirectory.getIndexScriptContent()).executeVoid();
+    runtime.getExecutor(workingDirectory.getIndexScriptContent()).setModule(true).executeVoid();
   }
 
   /**
