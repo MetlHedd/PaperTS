@@ -81,6 +81,7 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
   public void loadModule(String moduleName) throws JavetException, IOException {
     Path modulePath = getDataFolder().toPath().resolve(moduleName);
 
+    pool.initRuntime(modulePath);
     pool.startRuntime(modulePath);
   }
 
