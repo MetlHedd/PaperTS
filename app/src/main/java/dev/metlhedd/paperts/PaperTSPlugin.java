@@ -1,11 +1,15 @@
 package dev.metlhedd.paperts;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import com.caoccao.javet.exceptions.JavetException;
 
 /**
  * Main class for the PaperTS plugin.
@@ -31,6 +35,7 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
     }
 
     Bukkit.getPluginManager().registerEvents(this, this);
+    getServer().getCommandMap().register("paperts", new Command("paperts", this));
   }
 
   @Override
@@ -71,5 +76,31 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
         }
       }
     }
+  }
+
+  public void loadModule(String moduleName) throws JavetException, IOException {
+    Path modulePath = getDataFolder().toPath().resolve(moduleName);
+
+    pool.startRuntime(modulePath);
+  }
+
+  public void unloadModule(String moduleName) throws JavetException {
+    Path modulePath = getDataFolder().toPath().resolve(moduleName);
+
+    pool.releaseRuntime(modulePath);
+  }
+
+  public void reloadAllModules() throws JavetException, IOException {
+    pool.releaseAllRuntimes();
+    setupModules();
+  }
+
+  public void reloadModule(String moduleName) throws JavetException, IOException {
+    unloadModule(moduleName);
+    loadModule(moduleName);
+  }
+
+  public Set<Path> listModules() {
+    return pool.listRuntimes();
   }
 }

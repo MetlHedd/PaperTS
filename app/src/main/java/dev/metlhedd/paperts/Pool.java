@@ -3,6 +3,7 @@ package dev.metlhedd.paperts;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Set;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -235,5 +236,9 @@ public class Pool {
     this.workingDirectories.clear();
 
     System.gc();
+  }
+
+  public Set<Path> listRuntimes() {
+    return this.runtimes.keySet();
   }
 }
