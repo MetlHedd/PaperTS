@@ -95,9 +95,13 @@ public class Pool {
     // Create a new runtime if it doesn't exist
     IJavetEngine<V8Runtime> javetEngine = this.javetEnginePool.getEngine();
     V8Runtime runtime = javetEngine.getV8Runtime();
+    NodeRuntime nodeRuntime = (NodeRuntime) runtime;
     WorkingDirectory workingDirectory = new WorkingDirectory(path);
     JavetJVMInterceptor javetJVMInterceptor = new JavetJVMInterceptor(runtime);
     Globals globals = new Globals(plugin);
+
+    javetEngine.getConfig().setAllowEval(true);
+    nodeRuntime.getNodeModule(NodeModuleModule.class).setRequireRootDirectory(path.toAbsolutePath().toString());
 
     runtime.setConverter(proxyConverter);
     javetJVMInterceptor.register(runtime.getGlobalObject());
@@ -113,8 +117,6 @@ public class Pool {
     this.javetJVMInterceptors.put(path, javetJVMInterceptor);
     this.workingDirectories.put(path, workingDirectory);
     this.globalsMap.put(path, globals);
-
-    this.setupNodeModules(path);
 
     // Setup required function
     runtime
@@ -132,6 +134,11 @@ public class Pool {
                 };
                 """)
         .executeVoid();
+
+    // Setup the working directory
+    // runtime.getExecutor("process.chdir('" + path.toAbsolutePath().toString() + "');").executeVoid();
+    //this.plugin.getLogger()
+    //    .info("Initialized runtime for path: " + path.toAbsolutePath().toString());
   }
 
   /**
@@ -148,15 +155,20 @@ public class Pool {
     // Check if the runtime exists before releasing it
     if (this.runtimes.containsKey(path)) {
       V8Runtime runtime = this.runtimes.get(path);
+      NodeRuntime nodeRuntime = (NodeRuntime) runtime;
       JavetJVMInterceptor javetJVMInterceptor = this.javetJVMInterceptors.get(path);
       Globals globals = this.globalsMap.get(path);
+      IJavetEngine<V8Runtime> javetEngine = this.javetEngine.get(path);
 
       // Release and await its completion
+      nodeRuntime.terminateExecution();
+      nodeRuntime.setStopping(true);
+      nodeRuntime.close();
+      javetEngine.close();
       globals.unregisterAllEvents();
       globals.unregisterAllCommands();
-      runtime.await();
       javetJVMInterceptor.unregister(runtime.getGlobalObject());
-      runtime.lowMemoryNotification();
+      javetEngine.resetContext();
 
       // Remove the runtime and engine from the maps
       this.runtimes.remove(path);
@@ -166,25 +178,6 @@ public class Pool {
 
       System.gc();
     }
-  }
-
-  /**
-   * Sets up the Node.js modules for the runtime at the given path.
-   * This method configures the working directory for the runtime and prepares it
-   * to require modules.
-   * It is called after initializing a runtime to ensure that the Node.js
-   * environment is correctly set up.
-   * 
-   * @param path The path to the module directory.
-   * @throws RuntimeException if the runtime is not found for the given path.
-   * @throws JavetException   if there is an error setting up the Node.js modules.
-   */
-  private void setupNodeModules(Path path) throws RuntimeException, JavetException {
-    NodeRuntime runtime = (NodeRuntime) this.runtimes.get(path);
-    WorkingDirectory workingDirectory = this.workingDirectories.get(path);
-
-    // Set the working directory for the runtime
-    runtime.getNodeModule(NodeModuleModule.class).setRequireRootDirectory(workingDirectory.getPath().toFile());
   }
 
   /**
