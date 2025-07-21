@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "incremental": true,
+    "module": "commonjs",
+    "esModuleInterop": false,
+    "strict": true,
+    "outDir": "./dist",
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "typeRoots": [
+      "node_modules/paperts-java-ts-bind"
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ]
+}
