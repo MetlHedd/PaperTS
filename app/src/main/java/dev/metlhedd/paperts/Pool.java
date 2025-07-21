@@ -209,6 +209,7 @@ public class Pool {
 
     // Execute the index script in the runtime
     runtime.getExecutor(workingDirectory.getIndexScriptContent()).setModule(true).executeVoid();
+    runtime.await();
   }
 
   /**
