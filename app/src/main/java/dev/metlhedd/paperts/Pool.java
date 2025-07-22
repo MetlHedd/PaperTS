@@ -208,8 +208,7 @@ public class Pool {
       WorkingDirectory workingDirectory = this.workingDirectories.get(path);
 
       // Execute the index script in the runtime
-      runtime.getExecutor(workingDirectory.getIndexScriptContent())
-          .setResourceName(workingDirectory.getIndexScriptPath().toAbsolutePath().toString()).setModule(true)
+      runtime.getExecutor(workingDirectory.getIndexScriptContent()).setModule(true)
           .executeVoid();
       runtime.await();
     } catch (Exception e) {
