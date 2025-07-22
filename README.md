@@ -40,6 +40,59 @@ PaperTS is a Paper Minecraft plugin that enables you to write Minecraft server p
     ```
 5. Start your Paper server. PaperTS will automatically load your module. You can reload the modules any time using the `/paperts reload` command.
 
+### PaperTS Global API
+
+The following global API is available in your TypeScript/JavaScript code:
+
+```ts
+declare namespace PaperTS {
+  export function registerEvent<T extends Event>(
+    eventClass: { new (...args: any[]): T },
+    listener: (event: T) => void,
+  ): void;
+
+  export function registerCommand(
+    name: string,
+    description: string,
+    usageMessage: string,
+    permission: string,
+    aliases: string[],
+    executor: (sender: CommandSender, args: string[]) => void,
+  ): void;
+}
+```
+
+#### Registering Events
+
+To register events, use the `PaperTS.registerEvent` method. You can pass the event class and a callback function that will be executed when the event is triggered.
+
+```js
+PaperTS.registerEvent(org.bukkit.event.player.PlayerJoinEvent, (event) => {
+  PaperTS.sendMessage(event.player.name, 'Welcome to the server!');
+});
+```
+
+#### Registering Commands
+
+To register commands, use the `PaperTS.registerCommand` method. You can specify the command name, description, usage message, permission, aliases, and an executor function that will handle the command execution.
+
+```js
+PaperTS.registerCommand(
+  'mycommand',
+  'This is my command',
+  '/mycommand <arg>',
+  'myplugin.command',
+  ['mc'],
+  (sender, args) => {
+    if (args.length > 0) {
+      PaperTS.sendMessage(sender.name, `You provided argument: ${args[0]}`);
+    } else {
+      PaperTS.sendMessage(sender.name, 'No arguments provided.');
+    }
+  },
+);
+```
+
 ### Using typescript
 
 To use TypeScript, you can set up a `tsconfig.json` in your module directory:
