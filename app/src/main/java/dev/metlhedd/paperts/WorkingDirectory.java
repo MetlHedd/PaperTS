@@ -10,7 +10,8 @@ import com.google.gson.JsonSyntaxException;
 
 /**
  * Represents a working directory for a module.
- * This class is responsible for managing the path and index script of the module.
+ * This class is responsible for managing the path and index script of the
+ * module.
  */
 public class WorkingDirectory {
   /**
@@ -29,13 +30,15 @@ public class WorkingDirectory {
 
   /**
    * Constructor for the WorkingDirectory class.
-   * Initializes the working directory with the given path and sets the index script
+   * Initializes the working directory with the given path and sets the index
+   * script
    * from the package file.
    *
    * @param path The path to the working directory.
-   * @throws RuntimeException if the package file is not found or if there is an
-   *                          error reading it.
-   * @throws IOException       if there is an error reading the package file.
+   * @throws RuntimeException    if the package file is not found or if there is
+   *                             an
+   *                             error reading it.
+   * @throws IOException         if there is an error reading the package file.
    * @throws JsonSyntaxException if the package file is not a valid JSON.
    */
   public WorkingDirectory(Path path) throws RuntimeException, IOException, JsonSyntaxException {
@@ -49,9 +52,10 @@ public class WorkingDirectory {
    * This method reads the package.json file and extracts the "main" field to set
    * the index script.
    *
-   * @throws RuntimeException if the package file is not found or if there is an
-   *                          error reading it.
-   * @throws IOException       if there is an error reading the package file.
+   * @throws RuntimeException    if the package file is not found or if there is
+   *                             an
+   *                             error reading it.
+   * @throws IOException         if there is an error reading the package file.
    * @throws JsonSyntaxException if the package file is not a valid JSON.
    */
   private void setIndexScriptFromPackageFile() throws RuntimeException, IOException, JsonSyntaxException {
@@ -82,6 +86,10 @@ public class WorkingDirectory {
     String fileContent = Files.readString(path.resolve(indexScript));
 
     return fileContent;
+  }
+
+  public Path getIndexScriptPath() {
+    return path.resolve(indexScript);
   }
 
   public Path getPath() {
