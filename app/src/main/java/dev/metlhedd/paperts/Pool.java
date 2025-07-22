@@ -135,6 +135,14 @@ public class Pool {
                 };
                 """)
         .executeVoid();
+    // Handle uncaught exceptions in the runtime
+    runtime.getExecutor(
+        """
+              process.on("uncaughtException", function (err) {
+                  console.error("Uncaught Exception:", err);
+              });
+            """)
+        .executeVoid();
   }
 
   /**
