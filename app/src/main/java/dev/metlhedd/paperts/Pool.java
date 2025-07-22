@@ -147,6 +147,11 @@ public class Pool {
               });
             """)
         .executeVoid();
+    // Prevent exports from being undefined
+    runtime.getExecutor(
+        """
+            var exports = exports || {};
+            """).executeVoid();
   }
 
   /**
