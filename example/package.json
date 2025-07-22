@@ -5,6 +5,7 @@
   },
   "dependencies": {
     "paperts-java-ts-bind": "github:MetlHedd/java-ts-bind#1.21.4-R0.1-SNAPSHOT",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@types/node": "^24.0.15"
   }
 }
