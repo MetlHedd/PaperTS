@@ -101,7 +101,8 @@ public class Pool {
     Globals globals = new Globals(plugin);
 
     javetEngine.getConfig().setAllowEval(true);
-    nodeRuntime.getNodeModule(NodeModuleModule.class).setRequireRootDirectory(path.toAbsolutePath().toString());
+    nodeRuntime.getNodeModule(NodeModuleModule.class).setRequireRootDirectory(path.toFile());
+    // nodeRuntime.getNodeModule(NodeModuleProcess.class).setWorkingDirectory(path.toFile());
 
     runtime.setConverter(proxyConverter);
     javetJVMInterceptor.register(runtime.getGlobalObject());
@@ -134,11 +135,6 @@ public class Pool {
                 };
                 """)
         .executeVoid();
-
-    // Setup the working directory
-    // runtime.getExecutor("process.chdir('" + path.toAbsolutePath().toString() + "');").executeVoid();
-    //this.plugin.getLogger()
-    //    .info("Initialized runtime for path: " + path.toAbsolutePath().toString());
   }
 
   /**
@@ -201,7 +197,9 @@ public class Pool {
     WorkingDirectory workingDirectory = this.workingDirectories.get(path);
 
     // Execute the index script in the runtime
-    runtime.getExecutor(workingDirectory.getIndexScriptContent()).setModule(true).executeVoid();
+    runtime.getExecutor(workingDirectory.getIndexScriptContent())
+        .setResourceName(workingDirectory.getIndexScriptPath().toAbsolutePath().toString()).setModule(true)
+        .executeVoid();
     runtime.await();
   }
 
