@@ -131,7 +131,7 @@ public class Pool {
                 const originalRequire = Module.prototype.require;
 
                 Module.prototype.require = function () {
-                  if (arguments.length === 1 && typeof arguments[0] === "string" && (arguments[0].startsWith("org") || arguments[0].startsWith("java"))) {
+                  if (arguments.length === 1 && typeof arguments[0] === "string" && (arguments[0].startsWith("org.") || arguments[0].startsWith("java.") || arguments[0].startsWith("net.") || arguments[0].startsWith("com."))) {
                     return javet.package[arguments[0]];
                   }
 
