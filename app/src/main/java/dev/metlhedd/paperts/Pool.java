@@ -57,12 +57,16 @@ public class Pool {
    * @throws JavetException if there is an error initializing the Javet engine
    *                        pool.
    */
-  public Pool(JavaPlugin plugin) throws JavetException {
+  public Pool(JavaPlugin plugin, boolean enableNodeI18n) throws JavetException {
     // Initialize the Javet engine pool and runtimes map
     this.javetEnginePool = new JavetEnginePool<>();
 
     // Set the JavaScript runtime type to Node.js
-    this.javetEnginePool.getConfig().setJSRuntimeType(JSRuntimeType.Node);
+    if (enableNodeI18n) {
+      this.javetEnginePool.getConfig().setJSRuntimeType(JSRuntimeType.NodeI18n);
+    } else {
+      this.javetEnginePool.getConfig().setJSRuntimeType(JSRuntimeType.Node);
+    }
 
     // Initialize the maps for storing runtimes and Javet engines
     this.javetEngine = new HashMap<>();
