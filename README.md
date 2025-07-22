@@ -134,15 +134,20 @@ Your `package.json` should look like this:
 {
   "main": "dist/index.js",
   "scripts": {
-    "watch": "tsc --project . --watch"
+    "watch": "tsc --project . --watch",
+    "bundle": "esbuild src/index.ts --watch --bundle --outfile=dist/index.js --platform=node --target=node22 --external:org.* --external:com.* --external:net.* --external:java.*"
   },
+  "type": "module",
   "dependencies": {
+    "esbuild": "^0.25.8",
     "paperts-java-ts-bind": "github:MetlHedd/java-ts-bind#1.21.4-R0.1-SNAPSHOT",
     "typescript": "^5.8.3",
     "@types/node": "^24.0.15"
   }
 }
 ```
+
+Then you can use `npm run bundle` to bundle your TypeScript code into a single JavaScript file that can be run by PaperTS.
 
 ### Internationalization (i18n)
 
