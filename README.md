@@ -102,13 +102,14 @@ To use TypeScript, you can set up a `tsconfig.json` in your module directory:
   "compilerOptions": {
     "incremental": true,
     "module": "commonjs",
-    "esModuleInterop": false,
+    "esModuleInterop": true,
     "strict": true,
     "outDir": "./dist",
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "typeRoots": [
-      "node_modules/paperts-java-ts-bind"
+      "node_modules/paperts-java-ts-bind",
+      "node_modules/@types"
     ]
   },
   "include": [
@@ -137,7 +138,8 @@ Your `package.json` should look like this:
   },
   "dependencies": {
     "paperts-java-ts-bind": "github:MetlHedd/java-ts-bind#1.21.4-R0.1-SNAPSHOT",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@types/node": "^24.0.15"
   }
 }
 ```
