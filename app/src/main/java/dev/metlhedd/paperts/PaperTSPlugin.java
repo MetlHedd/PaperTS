@@ -10,6 +10,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.caoccao.javet.exceptions.JavetException;
+import com.caoccao.javet.interop.options.NodeRuntimeOptions;
 
 /**
  * Main class for the PaperTS plugin.
@@ -20,10 +21,22 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
    */
   private Pool pool;
 
+  private boolean enableNodeI18n() {
+    File icuDataDir = getDataFolder().toPath().resolve("node-icu").toFile();
+
+    if (!icuDataDir.exists()) {
+      return false;
+    }
+
+    NodeRuntimeOptions.NODE_FLAGS.setIcuDataDir(icuDataDir.getAbsolutePath());
+
+    return true;
+  }
+
   @Override
   public void onEnable() {
     try {
-      this.pool = new Pool(this);
+      this.pool = new Pool(this, enableNodeI18n());
 
       setupModules();
     } catch (Exception e) {
@@ -102,8 +115,10 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
   }
 
   public void reloadAllModules() throws JavetException, IOException {
-    pool.releaseAllRuntimes();
-    setupModules();
+    for (Path path : this.listModules()) {
+      unloadModule(path.getFileName().toString());
+      loadModule(path.getFileName().toString());
+    }
   }
 
   public void reloadModule(String moduleName) throws JavetException, IOException {
