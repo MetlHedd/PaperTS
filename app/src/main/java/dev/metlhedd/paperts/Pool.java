@@ -173,12 +173,14 @@ public class Pool {
       globals.unregisterAllCommands();
       javetJVMInterceptor.unregister(runtime.getGlobalObject());
       javetEngine.resetContext();
+      javetEnginePool.releaseEngine(javetEngine);
 
       // Remove the runtime and engine from the maps
       this.runtimes.remove(path);
       this.javetEngine.remove(path);
       this.javetJVMInterceptors.remove(path);
       this.workingDirectories.remove(path);
+      this.globalsMap.remove(path);
 
       System.gc();
     }
@@ -201,14 +203,20 @@ public class Pool {
       throw new RuntimeException("Runtime not found: " + path);
     }
 
-    V8Runtime runtime = this.runtimes.get(path);
-    WorkingDirectory workingDirectory = this.workingDirectories.get(path);
+    try {
+      V8Runtime runtime = this.runtimes.get(path);
+      WorkingDirectory workingDirectory = this.workingDirectories.get(path);
 
-    // Execute the index script in the runtime
-    runtime.getExecutor(workingDirectory.getIndexScriptContent())
-        .setResourceName(workingDirectory.getIndexScriptPath().toAbsolutePath().toString()).setModule(true)
-        .executeVoid();
-    runtime.await();
+      // Execute the index script in the runtime
+      runtime.getExecutor(workingDirectory.getIndexScriptContent())
+          .setResourceName(workingDirectory.getIndexScriptPath().toAbsolutePath().toString()).setModule(true)
+          .executeVoid();
+      runtime.await();
+    } catch (Exception e) {
+      this.plugin.getLogger().severe("Failed to start runtime for path " + path + ": " + e.getMessage());
+      e.printStackTrace();
+    }
+
   }
 
   /**
