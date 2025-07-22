@@ -89,7 +89,11 @@ Your `package.json` should look like this:
 }
 ```
 
-### Plugin Commands
+### Internationalization (i18n)
+
+PaperTS supports internationalization (i18n) through the Node.js runtime, enabling it may lead to more compatible behavior with some Node.js modules. To enable i18n, create a folder name `node-icu` in the data folder of the plugin (normally `plugins/PaperTS/node-icu`) and place the ICU data files there. You can download the ICU data files from any actions run of the [Javet repository](https://github.com/caoccao/Javet). The plugin will automatically detect the presence of the `node-icu` folder and enable i18n support.
+
+## Plugin Commands
 
 You can use the following commands to manage your PaperTS modules:
 - `/paperts reload`: Reloads all modules.
