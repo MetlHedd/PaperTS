@@ -33,38 +33,17 @@ PaperTS is a Paper Minecraft plugin that enables you to write Minecraft server p
     ```
 4. **Example `index.js`**:
     ```js
-    import { Event } from "org.bukkit.event";
-    import { PlayerJoinEvent } from "org.bukkit.event.player";
-    import { CommandSender } from "org.bukkit.command";
-
-    declare namespace PaperTS {
-      export function registerEvent<T extends Event>(
-        eventClass: { new (...args: any[]): T },
-        listener: (event: T) => void,
-      ): void;
-
-      export function registerCommand(
-        name: string,
-        description: string,
-        usageMessage: string,
-        permission: string,
-        aliases: string[],
-        executor: (sender: CommandSender, args: string[]) => void,
-      ): void;
-    }
-
-    export class ServerModule {
+    class ServerModule {
       constructor() {
-        // This constructor is called when the module is loaded
         console.log("My plugin has been loaded!");
       }
 
-      public handlePlayerJoin(event: PlayerJoinEvent) {
+      public handlePlayerJoin(event) {
         // Handle player join event
         event.player.sendMessage(event.player.name, "Welcome to the server!");
       }
 
-      public helloCommand(sender: CommandSender, args: string[]) {
+      public helloCommand(sender, args) {
         sender.sendMessage("Hello from PaperTS!");
       }
     }
@@ -72,7 +51,7 @@ PaperTS is a Paper Minecraft plugin that enables you to write Minecraft server p
     const server = new ServerModule();
 
     PaperTS.registerEvent(
-      PlayerJoinEvent,
+      org.bukkit.event.player.PlayerJoinEvent,
       server.handlePlayerJoin.bind(server),
     );
     PaperTS.registerCommand(
@@ -114,9 +93,18 @@ declare namespace PaperTS {
 To register events, use the `PaperTS.registerEvent` method. You can pass the event class and a callback function that will be executed when the event is triggered.
 
 ```js
-PaperTS.registerEvent(org.bukkit.event.player.PlayerJoinEvent, (event) => {
-  PaperTS.sendMessage(event.player.name, 'Welcome to the server!');
-});
+export class ServerModule {
+  public handlePlayerJoin(event) {
+    console.log(`Player ${event.player.name} has joined the server!`);
+  }
+}
+
+const server = new ServerModule();
+
+PaperTS.registerEvent(
+  org.bukkit.event.PlayerJoinEvent,
+  server.handlePlayerJoin.bind(server),
+);
 ```
 
 #### Registering Commands
@@ -124,19 +112,21 @@ PaperTS.registerEvent(org.bukkit.event.player.PlayerJoinEvent, (event) => {
 To register commands, use the `PaperTS.registerCommand` method. You can specify the command name, description, usage message, permission, aliases, and an executor function that will handle the command execution.
 
 ```js
+class ServerModule {
+  public command(sender, args) {
+    console.log(`Command executed by ${sender.displayName()} with args: ${args.join(", ")}`);
+  }
+}
+
+const server = new ServerModule();
+
 PaperTS.registerCommand(
-  'mycommand',
-  'This is my command',
-  '/mycommand <arg>',
-  'myplugin.command',
-  ['mc'],
-  (sender, args) => {
-    if (args.length > 0) {
-      PaperTS.sendMessage(sender.name, `You provided argument: ${args[0]}`);
-    } else {
-      PaperTS.sendMessage(sender.name, 'No arguments provided.');
-    }
-  },
+  "commandname",
+  "Command description",
+  "/commandname <args>",
+  "command.permission",
+  ["alias1", "alias2"],
+  server.command.bind(server),
 );
 ```
 
@@ -188,7 +178,6 @@ Your `package.json` should look like this:
     "watch": "tsc --project . --watch",
     "bundle": "esbuild src/index.ts --watch --bundle --outfile=dist/index.js --platform=node --target=node22 --external:org.* --external:com.* --external:net.* --external:java.*"
   },
-  "type": "module",
   "dependencies": {
     "esbuild": "^0.25.8",
     "paperts-java-ts-bind": "github:MetlHedd/java-ts-bind#1.20-R0.1-SNAPSHOT",
@@ -199,6 +188,61 @@ Your `package.json` should look like this:
 ```
 
 Then you can use `npm run bundle` to bundle your TypeScript code into a single JavaScript file that can be run by PaperTS.
+
+Example `index.ts`:
+
+```ts
+import { Event } from "org.bukkit.event";
+import { PlayerJoinEvent } from "org.bukkit.event.player";
+import { CommandSender } from "org.bukkit.command";
+
+declare namespace PaperTS {
+  export function registerEvent<T extends Event>(
+    eventClass: { new (...args: any[]): T },
+    listener: (event: T) => void,
+  ): void;
+
+  export function registerCommand(
+    name: string,
+    description: string,
+    usageMessage: string,
+    permission: string,
+    aliases: string[],
+    executor: (sender: CommandSender, args: string[]) => void,
+  ): void;
+}
+
+export class ServerModule {
+  constructor() {
+    // This constructor is called when the module is loaded
+    console.log("My plugin has been loaded!");
+  }
+
+  public handlePlayerJoin(event: PlayerJoinEvent) {
+    // Handle player join event
+    event.player.sendMessage(event.player.name, "Welcome to the server!");
+  }
+
+  public helloCommand(sender: CommandSender, args: string[]) {
+    sender.sendMessage("Hello from PaperTS!");
+  }
+}
+
+const server = new ServerModule();
+
+PaperTS.registerEvent(
+  PlayerJoinEvent,
+  server.handlePlayerJoin.bind(server),
+);
+PaperTS.registerCommand(
+  "hello",
+  "Says hello to the player",
+  "/hello",
+  "",
+  [],
+  server.helloCommand.bind(server),
+);
+```
 
 ### Internationalization (i18n)
 
