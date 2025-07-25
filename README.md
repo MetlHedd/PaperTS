@@ -33,33 +33,57 @@ PaperTS is a Paper Minecraft plugin that enables you to write Minecraft server p
     ```
 4. **Example `index.js`**:
     ```js
+    import { Event } from "org.bukkit.event";
+    import { PlayerJoinEvent } from "org.bukkit.event.player";
+    import { CommandSender } from "org.bukkit.command";
+
+    declare namespace PaperTS {
+      export function registerEvent<T extends Event>(
+        eventClass: { new (...args: any[]): T },
+        listener: (event: T) => void,
+      ): void;
+
+      export function registerCommand(
+        name: string,
+        description: string,
+        usageMessage: string,
+        permission: string,
+        aliases: string[],
+        executor: (sender: CommandSender, args: string[]) => void,
+      ): void;
+    }
+
     export class ServerModule {
       constructor() {
         // This constructor is called when the module is loaded
-        console.log('My plugin has been loaded!');
+        console.log("My plugin has been loaded!");
       }
 
-      public handlePlayerJoin(event) {
+      public handlePlayerJoin(event: PlayerJoinEvent) {
         // Handle player join event
-        PaperTS.sendMessage(event.player.name, 'Welcome to the server!');
+        event.player.sendMessage(event.player.name, "Welcome to the server!");
       }
 
-      public helloCommand(sender, args) {
-        sender.sendMessage('Hello from PaperTS!');
+      public helloCommand(sender: CommandSender, args: string[]) {
+        sender.sendMessage("Hello from PaperTS!");
       }
     }
 
     const server = new ServerModule();
 
-    PaperTS.registerEvent(org.bukkit.event.player.PlayerJoinEvent, serveer.handlePlayerJoin.bind(server));
+    PaperTS.registerEvent(
+      PlayerJoinEvent,
+      server.handlePlayerJoin.bind(server),
+    );
     PaperTS.registerCommand(
-      'hello',
-      'Says hello to the player',
-      '/hello',
-      '',
+      "hello",
+      "Says hello to the player",
+      "/hello",
+      "",
       [],
       server.helloCommand.bind(server),
     );
+
     ```
 5. Start your Paper server. PaperTS will automatically load your module. You can reload the modules any time using the `/paperts reload` command.
 

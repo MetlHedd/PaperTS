@@ -18,21 +18,33 @@ declare namespace PaperTS {
   ): void;
 }
 
-console.log("Hello, PaperTS!");
+export class ServerModule {
+  constructor() {
+    // This constructor is called when the module is loaded
+    console.log("My plugin has been loaded!");
+  }
 
-PaperTS.registerEvent(PlayerJoinEvent, (event) => {
-  const player = event.player;
-  player.sendMessage("Welcome to the server, " + player.name + "!");
-});
+  public handlePlayerJoin(event: PlayerJoinEvent) {
+    // Handle player join event
+    event.player.sendMessage(event.player.name, "Welcome to the server!");
+  }
 
+  public helloCommand(sender: CommandSender, args: string[]) {
+    sender.sendMessage("Hello from PaperTS!");
+  }
+}
+
+const server = new ServerModule();
+
+PaperTS.registerEvent(
+  PlayerJoinEvent,
+  server.handlePlayerJoin.bind(server),
+);
 PaperTS.registerCommand(
-  "greet",
-  "Greet a player",
-  "/greet <player>",
+  "hello",
+  "Says hello to the player",
+  "/hello",
   "",
   [],
-  (sender, args) => {
-    console.log("Greet command executed by: " + sender.name);
-    console.log("Arguments: " + args.join(", "));
-  },
+  server.helloCommand.bind(server),
 );
