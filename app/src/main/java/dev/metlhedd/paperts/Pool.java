@@ -147,10 +147,14 @@ public class Pool {
               });
             """)
         .executeVoid();
-    // Prevent exports from being undefined
+    // Prevent exports and module from being undefined
     runtime.getExecutor(
         """
             var exports = exports || {};
+            """).executeVoid();
+    runtime.getExecutor(
+        """
+            var module = module || {};
             """).executeVoid();
   }
 
