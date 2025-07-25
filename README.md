@@ -85,6 +85,33 @@ declare namespace PaperTS {
     aliases: string[],
     executor: (sender: CommandSender, args: string[]) => void,
   ): void;
+
+  export function getPersistentContainerString(
+    key: string,
+    container: PersistentDataContainer
+  ): string;
+
+  export function getPersistentContainerStringList(
+    key: string,
+    container: PersistentDataContainer
+  ): string[];
+
+  export function hasKeyPersistentContainer(
+    key: string,
+    container: PersistentDataContainer
+  ): boolean;
+
+  export function setPersistentContainerString(
+    key: string,
+    value: string,
+    container: PersistentDataContainer
+  ): void;
+
+  export function setPersistentContainerStringList(
+    key: string,
+    value: List<String>,
+    container: PersistentDataContainer
+  ): void;
 }
 ```
 
