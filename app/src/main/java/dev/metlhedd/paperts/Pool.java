@@ -18,6 +18,7 @@ import com.caoccao.javet.interop.converters.JavetProxyConverter;
 import com.caoccao.javet.interop.engine.IJavetEngine;
 import com.caoccao.javet.interop.engine.IJavetEnginePool;
 import com.caoccao.javet.interop.engine.JavetEnginePool;
+import com.caoccao.javet.interop.options.NodeRuntimeOptions;
 import com.caoccao.javet.node.modules.NodeModuleModule;
 import com.google.gson.JsonSyntaxException;
 
@@ -42,25 +43,28 @@ public class Pool {
   private JavaPlugin plugin;
   /**
    * A map to track whether a runtime can be closed for each path.
-   * The key is the path to the module directory, and the value is an AtomicBoolean
+   * The key is the path to the module directory, and the value is an
+   * AtomicBoolean
    * indicating whether the runtime can be closed.
    * This is used to manage the lifecycle of runtimes and ensure they are closed
    * properly when they are no longer needed.
    */
   private HashMap<Path, AtomicBoolean> runtimeCanBeClosed;
+  private JSRuntimeType runtimeType;
 
   /**
    * Constructor for the Pool class.
    * Initializes the Javet engine pool and sets the JavaScript runtime type to
    * Node.js.
    * 
-   * @param plugin The JavaPlugin instance associated with this pool.
+   * @param plugin         The JavaPlugin instance associated with this pool.
    * @param enableNodeI18n A boolean indicating whether to enable Node.js with
    *                       internationalization (i18n) support.
    *                       If true, the Node.js runtime will be configured to use
    *                       the ICU data directory specified in the plugin's data
    *                       folder.
-   *                       If false, the Node.js runtime will be configured without
+   *                       If false, the Node.js runtime will be configured
+   *                       without
    *                       i18n support.
    * @throws JavetException if there is an error initializing the Javet engine
    *                        pool.
@@ -70,11 +74,18 @@ public class Pool {
     this.javetEnginePool = new JavetEnginePool<>();
 
     // Set the JavaScript runtime type to Node.js
+    NodeRuntimeOptions nodeRuntimeOptions = new NodeRuntimeOptions();
+    nodeRuntimeOptions.setConsoleArguments(new String[] { "--input-type=commonjs" });
+
     if (enableNodeI18n) {
-      this.javetEnginePool.getConfig().setJSRuntimeType(JSRuntimeType.NodeI18n);
+      this.runtimeType = JSRuntimeType.NodeI18n;
+      this.runtimeType.isRuntimeOptionsValid(nodeRuntimeOptions);
     } else {
-      this.javetEnginePool.getConfig().setJSRuntimeType(JSRuntimeType.Node);
+      this.runtimeType = JSRuntimeType.Node;
+      this.runtimeType.isRuntimeOptionsValid(nodeRuntimeOptions);
     }
+
+    this.javetEnginePool.getConfig().setJSRuntimeType(this.runtimeType);
 
     this.proxyConverter = new JavetProxyConverter();
     this.plugin = plugin;
@@ -98,13 +109,15 @@ public class Pool {
    */
   public void initRuntime(Path path)
       throws RuntimeException, IOException, JsonSyntaxException, JavetException, InterruptedException {
+        
+
     try (IJavetEngine<V8Runtime> javetEngine = this.javetEnginePool.getEngine()) {
       if (javetEngine == null) {
         throw new RuntimeException("Failed to get Javet engine from pool.");
       }
 
       // Set the runtime type to Node.js
-      javetEngine.getConfig().setJSRuntimeType(JSRuntimeType.Node);
+      javetEngine.getConfig().setJSRuntimeType(this.runtimeType);
 
       try (V8Runtime runtime = javetEngine.getV8Runtime()) {
         if (runtime == null) {
@@ -193,10 +206,14 @@ public class Pool {
 
           if (this.runtimeCanBeClosed.get(path).get()) {
             plugin.getLogger().info("Closing runtime for path: " + path);
+            
             globals.unregisterAllCommands();
             globals.unregisterAllEvents();
             runtime.close();
+            javetEngine.close();
+            runtime.resetContext();
             javetEngine.resetContext();
+            this.javetEnginePool.releaseEngine(javetEngine);
             this.runtimeCanBeClosed.remove(path);
 
             return;
@@ -215,8 +232,9 @@ public class Pool {
    * 
    * @param path The path to the module directory.
    * @throws JavetException if there is an error releasing the runtime.
-   * * @throws InterruptedException if the thread is interrupted while waiting for
-   *                              the runtime to be ready.
+   *                        * @throws InterruptedException if the thread is
+   *                        interrupted while waiting for
+   *                        the runtime to be ready.
    */
   public void releaseRuntime(Path path) throws JavetException, InterruptedException {
     AtomicBoolean canBeClosed = this.runtimeCanBeClosed.get(path);
@@ -252,6 +270,7 @@ public class Pool {
    * Returns a set of paths for all runtimes managed by this pool.
    * This method is useful for iterating through the runtimes or checking which
    * runtimes are currently active.
+   * 
    * @return A set of paths representing the runtimes managed by this pool.
    */
   public Set<Path> getRuntimes() {
