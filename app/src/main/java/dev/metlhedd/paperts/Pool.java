@@ -35,7 +35,18 @@ public class Pool {
    * objects and vice versa.
    */
   private JavetProxyConverter proxyConverter;
+  /**
+   * The JavaPlugin instance associated with this pool, used for logging and
+   * accessing plugin resources.
+   */
   private JavaPlugin plugin;
+  /**
+   * A map to track whether a runtime can be closed for each path.
+   * The key is the path to the module directory, and the value is an AtomicBoolean
+   * indicating whether the runtime can be closed.
+   * This is used to manage the lifecycle of runtimes and ensure they are closed
+   * properly when they are no longer needed.
+   */
   private HashMap<Path, AtomicBoolean> runtimeCanBeClosed;
 
   /**
@@ -43,6 +54,14 @@ public class Pool {
    * Initializes the Javet engine pool and sets the JavaScript runtime type to
    * Node.js.
    * 
+   * @param plugin The JavaPlugin instance associated with this pool.
+   * @param enableNodeI18n A boolean indicating whether to enable Node.js with
+   *                       internationalization (i18n) support.
+   *                       If true, the Node.js runtime will be configured to use
+   *                       the ICU data directory specified in the plugin's data
+   *                       folder.
+   *                       If false, the Node.js runtime will be configured without
+   *                       i18n support.
    * @throws JavetException if there is an error initializing the Javet engine
    *                        pool.
    */
@@ -74,6 +93,8 @@ public class Pool {
    * @throws IOException         if there is an error reading the module files.
    * @throws JsonSyntaxException if the package.json file is malformed.
    * @throws JavetException      if there is an error with the Javet engine.
+   * @throws InterruptedException if the thread is interrupted while waiting for
+   *                              the runtime to be ready.
    */
   public void initRuntime(Path path)
       throws RuntimeException, IOException, JsonSyntaxException, JavetException, InterruptedException {
@@ -194,6 +215,8 @@ public class Pool {
    * 
    * @param path The path to the module directory.
    * @throws JavetException if there is an error releasing the runtime.
+   * * @throws InterruptedException if the thread is interrupted while waiting for
+   *                              the runtime to be ready.
    */
   public void releaseRuntime(Path path) throws JavetException, InterruptedException {
     AtomicBoolean canBeClosed = this.runtimeCanBeClosed.get(path);
@@ -212,11 +235,6 @@ public class Pool {
    * Releases all runtimes managed by this pool.
    * This method iterates through all runtimes, releasing each one and clearing
    * the maps.
-   * It also closes the Javet engine pool and clears the Javet engine.
-   * After releasing all resources, it performs garbage collection to free up
-   * memory.
-   * This is typically called when the plugin is disabled or when the application
-   * is shutting down.
    * 
    * @throws JavetException if there is an error releasing the runtimes.
    */
@@ -230,6 +248,12 @@ public class Pool {
     }
   }
 
+  /**
+   * Returns a set of paths for all runtimes managed by this pool.
+   * This method is useful for iterating through the runtimes or checking which
+   * runtimes are currently active.
+   * @return A set of paths representing the runtimes managed by this pool.
+   */
   public Set<Path> getRuntimes() {
     return this.runtimeCanBeClosed.keySet();
   }
