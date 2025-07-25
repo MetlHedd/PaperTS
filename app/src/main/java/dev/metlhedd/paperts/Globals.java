@@ -2,7 +2,6 @@ package dev.metlhedd.paperts;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -234,30 +233,6 @@ public class Globals {
   }
 
   /**
-   * Retrieves a list of strings from a PersistentDataContainer.
-   * This method allows for retrieving a list of strings associated with a
-   * specific
-   * key in the container.
-   * 
-   * @param key       The key to look up in the container.
-   * @param container The PersistentDataContainer to retrieve the list from.
-   * @return An array of strings associated with the key, or an empty array if not
-   *         found.
-   * @throws IllegalArgumentException if the container is null.
-   */
-  public String[] getPersistentContainerStringList(String key, PersistentDataContainer container)
-      throws IllegalArgumentException {
-    if (container == null) {
-      throw new IllegalArgumentException("PersistentDataContainer cannot be null.");
-    }
-
-    List<String> list = container.get(new NamespacedKey(this.plugin, key), PersistentDataType.LIST.strings());
-    String[] array = new String[list.size()];
-
-    return list.toArray(array);
-  }
-
-  /**
    * Checks if a key exists in a PersistentDataContainer.
    * This method allows for checking if a specific key is present in the
    * container.
@@ -293,25 +268,5 @@ public class Globals {
     }
 
     container.set(new NamespacedKey(this.plugin, key), PersistentDataType.STRING, value);
-  }
-
-  /**
-   * Sets a list of strings in a PersistentDataContainer.
-   * This method allows for setting a list of strings associated with a specific
-   * key
-   * in the container.
-   * 
-   * @param key       The key to associate with the list of strings.
-   * @param value     The list of strings to set.
-   * @param container The PersistentDataContainer to set the list in.
-   * @throws IllegalArgumentException if the container is null.
-   */
-  public void setPersistentContainerStringList(String key, String[] value,
-      PersistentDataContainer container) throws IllegalArgumentException {
-    if (container == null) {
-      throw new IllegalArgumentException("PersistentDataContainer cannot be null.");
-    }
-
-    container.set(new NamespacedKey(this.plugin, key), PersistentDataType.LIST.strings(), List.of(value));
   }
 }

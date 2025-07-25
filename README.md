@@ -91,11 +91,6 @@ declare namespace PaperTS {
     container: PersistentDataContainer
   ): string;
 
-  export function getPersistentContainerStringList(
-    key: string,
-    container: PersistentDataContainer
-  ): string[];
-
   export function hasKeyPersistentContainer(
     key: string,
     container: PersistentDataContainer
@@ -104,12 +99,6 @@ declare namespace PaperTS {
   export function setPersistentContainerString(
     key: string,
     value: string,
-    container: PersistentDataContainer
-  ): void;
-
-  export function setPersistentContainerStringList(
-    key: string,
-    value: List<String>,
     container: PersistentDataContainer
   ): void;
 }
