@@ -12,6 +12,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.interop.options.NodeRuntimeOptions;
 
+import net.byteflux.libby.BukkitLibraryManager;
+import net.byteflux.libby.Library;
+
 /**
  * Main class for the PaperTS plugin.
  */
@@ -21,12 +24,75 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
    */
   private Pool pool;
 
+  private void downloadNodeJsDependencies() {
+    String osArchitecture = System.getProperty("os.arch");
+    String osName = System.getProperty("os.name");
+    String nodeJsPackage = "";
+    BukkitLibraryManager bukkitLibraryManager = new BukkitLibraryManager(this);
+
+    bukkitLibraryManager.addMavenCentral();
+
+    if (osName.toLowerCase().contains("windows")) {
+      if (osArchitecture.contains("64")) {
+        nodeJsPackage = "javet-node-windows-x86_64";
+      } else {
+        throw new UnsupportedOperationException("Unsupported architecture " + osArchitecture + " for Windows.");
+      }
+    } else if (osName.toLowerCase().contains("darwin")) {
+      if (osArchitecture.contains("aarch64") || osArchitecture.contains("arm64")) {
+        nodeJsPackage = "javet-node-macos-arm64";
+      } else if (osArchitecture.contains("64")) {
+        nodeJsPackage = "javet-node-macos-x86_64";
+      } else {
+        throw new UnsupportedOperationException("Unsupported architecture " + osArchitecture + " for MacOS.");
+      }
+    } else if (osName.toLowerCase().contains("linux")) {
+      if (osArchitecture.contains("aarch64") || osArchitecture.contains("arm64")) {
+        nodeJsPackage = "javet-node-linux-arm64";
+      } else if (osArchitecture.contains("64")) {
+        nodeJsPackage = "javet-node-linux-x86_64";
+      } else {
+        throw new UnsupportedOperationException("Unsupported architecture " + osArchitecture + " for Linux.");
+      }
+    } else {
+      throw new UnsupportedOperationException("Unsupported OS: " + osName);
+    }
+
+    getLogger().info("Detected OS: " + osName + ", Architecture: " + osArchitecture);
+    getLogger().info("Using Node.js package: " + nodeJsPackage);
+
+    // Add node.js dependency to the library manager
+    Library nodeJsLib = Library.builder()
+        .groupId("com{}caoccao{}javet")
+        .artifactId(nodeJsPackage)
+        .version("4.1.5")
+        .build();
+
+    bukkitLibraryManager.loadLibrary(nodeJsLib);
+    
+
+    File icuDataDir = getDataFolder().toPath().resolve("node-icu").toFile();
+
+    if (icuDataDir.exists()) {
+      getLogger().info("Downloading Node.js i18n library...");
+
+      Library nodeI18nJsLib = Library.builder()
+          .groupId("com{}caoccao{}javet")
+          .artifactId(nodeJsPackage + "-i18n")
+          .version("4.1.5")
+          .build();
+
+      bukkitLibraryManager.loadLibrary(nodeI18nJsLib);
+    }
+  }
+
   /**
    * Enables Node.js with internationalization (i18n) support.
    * This method checks if the ICU data directory exists in the plugin's data
    * folder and sets the Node.js flags accordingly.
    * If the directory does not exist, it returns false, indicating that i18n
    * support cannot be enabled.
+   * 
    * @return true if i18n support is enabled, false otherwise.
    */
   private boolean enableNodeI18n() {
@@ -40,6 +106,7 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
 
     return true;
   }
+
   /**
    * Called when the plugin is enabled.
    * This method initializes the pool and sets up modules by scanning the server
@@ -48,6 +115,8 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
    */
   @Override
   public void onEnable() {
+    this.downloadNodeJsDependencies();
+
     try {
       this.pool = new Pool(this, enableNodeI18n());
 
@@ -113,9 +182,11 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
    * Loads a module by its name.
    * This method starts a new thread to initialize the runtime for the specified
    * module.
+   * 
    * @param moduleName The name of the module to load.
-   * It constructs the module path from the plugin's data folder and calls the
-   * pool's initRuntime method.
+   *                   It constructs the module path from the plugin's data folder
+   *                   and calls the
+   *                   pool's initRuntime method.
    */
   public void loadModule(String moduleName) {
     new Thread(() -> {
@@ -135,10 +206,12 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
    * Unloads a module by its name.
    * This method releases the runtime for the specified module and removes it from
    * the pool.
+   * 
    * @param moduleName The name of the module to unload.
-   * It constructs the module path from the plugin's data folder and calls the
-   * pool's releaseRuntime method.
-   * @throws JavetException if there is an error releasing the runtime.
+   *                   It constructs the module path from the plugin's data folder
+   *                   and calls the
+   *                   pool's releaseRuntime method.
+   * @throws JavetException       if there is an error releasing the runtime.
    * @throws InterruptedException if the thread is interrupted while waiting for
    *                              the runtime to be ready.
    */
@@ -152,8 +225,9 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
    * Reloads all modules managed by the pool.
    * This method iterates through all modules, unloading and then loading each one
    * to refresh their state.
-   * @throws JavetException if there is an error reloading the modules.
-   * @throws IOException if there is an error reading the module files.
+   * 
+   * @throws JavetException       if there is an error reloading the modules.
+   * @throws IOException          if there is an error reading the module files.
    * @throws InterruptedException if the thread is interrupted while waiting for
    *                              the runtime to be ready.
    */
@@ -168,9 +242,10 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
    * Reloads a specific module by its name.
    * This method first unloads the module and then loads it again to refresh its
    * state.
+   * 
    * @param moduleName The name of the module to reload.
-   * @throws JavetException if there is an error reloading the module.
-   * @throws IOException if there is an error reading the module files.
+   * @throws JavetException       if there is an error reloading the module.
+   * @throws IOException          if there is an error reading the module files.
    * @throws InterruptedException if the thread is interrupted while waiting for
    *                              the runtime to be ready.
    */
@@ -183,6 +258,7 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
    * Lists all modules managed by the pool.
    * This method returns a set of paths representing the modules currently
    * managed by the pool.
+   * 
    * @return A set of paths representing the modules managed by the pool.
    */
   public Set<Path> listModules() {

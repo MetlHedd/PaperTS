@@ -11,6 +11,10 @@ repositories {
         name = 'papermc'
         url = 'https://repo.papermc.io/repository/maven-public/'
     }
+    maven {
+        name 'alessiodpRepo'
+        url 'https://repo.alessiodp.com/releases'
+    }
 }
 
 dependencies {
@@ -18,23 +22,8 @@ dependencies {
     implementation libs.guava
 
     compileOnly 'io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT'
-
     implementation 'com.caoccao.javet:javet:4.1.5'
-
-    implementation 'com.caoccao.javet:javet-node-linux-arm64:4.1.5'
-    implementation 'com.caoccao.javet:javet-node-linux-arm64-i18n:4.1.5'
-
-    implementation 'com.caoccao.javet:javet-node-linux-x86_64:4.1.5'
-    implementation 'com.caoccao.javet:javet-node-linux-x86_64-i18n:4.1.5'
-
-    implementation 'com.caoccao.javet:javet-node-windows-x86_64:4.1.5'
-    implementation 'com.caoccao.javet:javet-node-windows-x86_64-i18n:4.1.5'
-
-    implementation 'com.caoccao.javet:javet-node-macos-x86_64:4.1.5'
-    implementation 'com.caoccao.javet:javet-node-macos-x86_64-i18n:4.1.5'
-
-    implementation 'com.caoccao.javet:javet-node-macos-arm64:4.1.5'
-    implementation 'com.caoccao.javet:javet-node-macos-arm64-i18n:4.1.5'
+    implementation 'net.byteflux:libby-bukkit:1.3.1'
 }
 
 jar {
