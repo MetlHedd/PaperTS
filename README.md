@@ -33,10 +33,33 @@ PaperTS is a Paper Minecraft plugin that enables you to write Minecraft server p
     ```
 4. **Example `index.js`**:
     ```js
-    // Access PaperTS global for event/command registration
-    PaperTS.registerEvent(org.bukkit.event.player.PlayerJoinEvent, (event) => {
-      PaperTS.sendMessage(event.player.name, 'Welcome to the server!');
-    });
+    export class ServerModule {
+      constructor() {
+        // This constructor is called when the module is loaded
+        console.log('My plugin has been loaded!');
+      }
+
+      public handlePlayerJoin(event) {
+        // Handle player join event
+        PaperTS.sendMessage(event.player.name, 'Welcome to the server!');
+      }
+
+      public helloCommand(sender, args) {
+        sender.sendMessage('Hello from PaperTS!');
+      }
+    }
+
+    const server = new ServerModule();
+
+    PaperTS.registerEvent(org.bukkit.event.player.PlayerJoinEvent, serveer.handlePlayerJoin.bind(server));
+    PaperTS.registerCommand(
+      'hello',
+      'Says hello to the player',
+      '/hello',
+      '',
+      [],
+      server.helloCommand.bind(server),
+    );
     ```
 5. Start your Paper server. PaperTS will automatically load your module. You can reload the modules any time using the `/paperts reload` command.
 
@@ -93,6 +116,10 @@ PaperTS.registerCommand(
 );
 ```
 
+#### Note
+
+Using `bind` is necessary when passing methods as callbacks to ensure the correct context (`this`) is maintained.
+
 ### Using typescript
 
 To use TypeScript, you can set up a `tsconfig.json` in your module directory:
@@ -121,7 +148,7 @@ To use TypeScript, you can set up a `tsconfig.json` in your module directory:
 Install the necessary depedencies in your module directory:
 
 ```sh
-npm install --save github:MetlHedd/java-ts-bind#1.21.4-R0.1-SNAPSHOT
+npm install --save github:MetlHedd/java-ts-bind#1.20-R0.1-SNAPSHOT
 ```
 
 You can substitute the version, with another version of the `paperts-java-ts-bind` package, if you want to use a different version. You can also request another version by opening an issue on this repository.
@@ -140,7 +167,7 @@ Your `package.json` should look like this:
   "type": "module",
   "dependencies": {
     "esbuild": "^0.25.8",
-    "paperts-java-ts-bind": "github:MetlHedd/java-ts-bind#1.21.4-R0.1-SNAPSHOT",
+    "paperts-java-ts-bind": "github:MetlHedd/java-ts-bind#1.20-R0.1-SNAPSHOT",
     "typescript": "^5.8.3",
     "@types/node": "^24.0.15"
   }
