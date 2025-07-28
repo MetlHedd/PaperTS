@@ -1,6 +1,6 @@
 # PaperTS
 
-PaperTS is a Paper Minecraft plugin that enables you to write Minecraft server plugins in TypeScript, running on the Node.js JavaScript engine via [Javet](https://github.com/caoccao/Javet). It provides a runtime environment for TypeScript modules, allowing you to leverage the power and flexibility of JavaScript/TypeScript for Minecraft server development.
+PaperTS is a Paper Minecraft plugin that enables you to write Minecraft server plugins in TypeScript, running on the Node.js JavaScript engine via [Javet](https://github.com/caoccao/Javet). It provides a runtime environment for TypeScript modules, allowing you to leverage the power and flexibility of JavaScript/TypeScript for Minecraft server development. **Node.JS runtime is downloaded at runtime**, the plugins install it from [Javet Official Depedencies](https://www.caoccao.com/Javet/tutorial/basic/installation.html), you may verify if your platform is supported.
 
 ## Features
 
