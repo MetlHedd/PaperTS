@@ -25,6 +25,7 @@ PaperTS is a Paper Minecraft plugin that enables you to write Minecraft server p
     - Add a `package.json` file with a `main` field pointing to your entry script (e.g., `index.js`).
     - Write your TypeScript/JavaScript code and compile it to JavaScript if needed.
 3. **Example `package.json`**:
+
     ```json
     {
       "name": "my-plugin",
@@ -32,6 +33,7 @@ PaperTS is a Paper Minecraft plugin that enables you to write Minecraft server p
     }
     ```
 4. **Example `index.js`**:
+
     ```js
     class ServerModule {
       constructor() {
@@ -65,6 +67,36 @@ PaperTS is a Paper Minecraft plugin that enables you to write Minecraft server p
 
     ```
 5. Start your Paper server. PaperTS will automatically load your module. You can reload the modules any time using the `/paperts reload` command.
+
+### Note
+
+The root for the imports of nodee modules is the root of the working directory, so if your directory structure is like this:
+
+```
+my-plugin/
+├── package.json
+├── src/
+│   └── index.ts
+├── dist/
+│   └── index.js
+└── node_modules/
+    └── some-node-module/
+```
+
+PaperTS will look for modules in `my-plugin` directory, you may need to adjust the `require` functiion if you want to import scripts from diferents paths that the root of the module. The required function is already modified with the following code to allow importing the java classes:
+
+```js
+const Module = require("module");
+const originalRequire = Module.prototype.require;
+
+Module.prototype.require = function () {
+  if (arguments.length === 1 && typeof arguments[0] === "string" && (arguments[0].startsWith("org.") || arguments[0].startsWith("java.") || arguments[0].startsWith("net.") || arguments[0].startsWith("com."))) {
+    return javet.package[arguments[0]];
+  }
+
+  return originalRequire.apply(this, arguments);
+};
+```
 
 ### PaperTS Global API
 
@@ -191,19 +223,18 @@ Your `package.json` should look like this:
 {
   "main": "dist/index.js",
   "scripts": {
-    "watch": "tsc --project . --watch",
-    "bundle": "esbuild src/index.ts --watch --bundle --outfile=dist/index.js --platform=node --target=node22 --external:org.* --external:com.* --external:net.* --external:java.*"
+    "build": "bun build ./src/index.ts --outdir=./dist --target=node --format=cjs --external=org.* --external=com.* --external=net.* --external=io.* --external=java.* --external=javet.* --watch"
   },
   "dependencies": {
-    "esbuild": "^0.25.8",
-    "paperts-java-ts-bind": "github:MetlHedd/java-ts-bind#1.20-R0.1-SNAPSHOT",
+    "bun": "^1.2.19",
+    "paperts-java-ts-bind": "github:MetlHedd/java-ts-bind#1.21.4-R0.1-SNAPSHOT",
     "typescript": "^5.8.3",
     "@types/node": "^24.0.15"
   }
 }
 ```
 
-Then you can use `npm run bundle` to bundle your TypeScript code into a single JavaScript file that can be run by PaperTS.
+Then you can use `npm run build` to bundle your TypeScript code into a single JavaScript file that can be run by PaperTS.
 
 Example `index.ts`:
 
