@@ -1,9 +1,10 @@
 {
   "main": "dist/index.js",
   "scripts": {
-    "watch": "tsc --project . --watch"
+    "build": "bun build ./src/index.ts --outdir=./dist --target=node --format=cjs --external=org.* --external=com.* --external=net.* --external=io.* --external=java.* --external=javet.* --watch"
   },
   "dependencies": {
+    "bun": "^1.2.19",
     "paperts-java-ts-bind": "github:MetlHedd/java-ts-bind#1.21.4-R0.1-SNAPSHOT",
     "typescript": "^5.8.3",
     "@types/node": "^24.0.15"
