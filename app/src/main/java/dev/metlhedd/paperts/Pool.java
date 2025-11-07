@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.caoccao.javet.enums.JSRuntimeType;
@@ -27,15 +28,6 @@ import com.google.gson.JsonSyntaxException;
  * This class handles the initialization, starting, and releasing of runtimes.
  */
 public class Pool {
-  /**
-   * The Javet engine pool for managing V8 runtimes.
-   */
-  private IJavetEnginePool<V8Runtime> javetEnginePool;
-  /**
-   * Converter for Javet proxies, used to convert Java objects to JavaScript
-   * objects and vice versa.
-   */
-  private JavetProxyConverter proxyConverter;
   /**
    * The JavaPlugin instance associated with this pool, used for logging and
    * accessing plugin resources.
@@ -70,9 +62,6 @@ public class Pool {
    *                        pool.
    */
   public Pool(JavaPlugin plugin, boolean enableNodeI18n) throws JavetException {
-    // Initialize the Javet engine pool and runtimes map
-    this.javetEnginePool = new JavetEnginePool<>();
-
     // Set the JavaScript runtime type to Node.js
     NodeRuntimeOptions nodeRuntimeOptions = new NodeRuntimeOptions();
     nodeRuntimeOptions.setConsoleArguments(new String[] { "--input-type=commonjs" });
@@ -85,9 +74,6 @@ public class Pool {
       this.runtimeType.isRuntimeOptionsValid(nodeRuntimeOptions);
     }
 
-    this.javetEnginePool.getConfig().setJSRuntimeType(this.runtimeType);
-
-    this.proxyConverter = new JavetProxyConverter();
     this.plugin = plugin;
     this.runtimeCanBeClosed = new HashMap<>();
 
@@ -100,127 +86,131 @@ public class Pool {
    * prepares the Node.js modules.
    * 
    * @param path The path to the module directory.
-   * @throws RuntimeException    if the runtime cannot be initialized.
-   * @throws IOException         if there is an error reading the module files.
-   * @throws JsonSyntaxException if the package.json file is malformed.
-   * @throws JavetException      if there is an error with the Javet engine.
+   * @throws RuntimeException     if the runtime cannot be initialized.
+   * @throws IOException          if there is an error reading the module files.
+   * @throws JsonSyntaxException  if the package.json file is malformed.
+   * @throws JavetException       if there is an error with the Javet engine.
    * @throws InterruptedException if the thread is interrupted while waiting for
    *                              the runtime to be ready.
    */
   public void initRuntime(Path path)
       throws RuntimeException, IOException, JsonSyntaxException, JavetException, InterruptedException {
-        
+    try (IJavetEnginePool<V8Runtime> javetEnginePool = new JavetEnginePool<>()) {
+      javetEnginePool.getConfig().setJSRuntimeType(this.runtimeType);
 
-    try (IJavetEngine<V8Runtime> javetEngine = this.javetEnginePool.getEngine()) {
-      if (javetEngine == null) {
-        throw new RuntimeException("Failed to get Javet engine from pool.");
-      }
-
-      // Set the runtime type to Node.js
-      javetEngine.getConfig().setJSRuntimeType(this.runtimeType);
-
-      try (V8Runtime runtime = javetEngine.getV8Runtime()) {
-        if (runtime == null) {
-          throw new RuntimeException("Failed to create V8 runtime.");
+      try (IJavetEngine<V8Runtime> javetEngine = javetEnginePool.getEngine()) {
+        if (javetEngine == null) {
+          throw new RuntimeException("Failed to get Javet engine from pool.");
         }
 
-        NodeRuntime nodeRuntime = (NodeRuntime) runtime;
-        WorkingDirectory workingDirectory = new WorkingDirectory(path);
-        JavetJVMInterceptor javetJVMInterceptor = new JavetJVMInterceptor(runtime);
-        Globals globals = new Globals(plugin);
-        AtomicBoolean scriptIsUp = new AtomicBoolean(false);
+        // Set the runtime type
 
-        javetEngine.getConfig().setAllowEval(true);
-        nodeRuntime.getNodeModule(NodeModuleModule.class).setRequireRootDirectory(path.toFile());
-        // nodeRuntime.getNodeModule(NodeModuleProcess.class).setWorkingDirectory(path.toFile());
+        javetEngine.getConfig().setJSRuntimeType(this.runtimeType);
 
-        runtime.setConverter(proxyConverter);
-        javetJVMInterceptor.register(runtime.getGlobalObject());
-
-        runtime.getGlobalObject().set("PaperTS", globals);
-
-        // Set the global objects for the runtime
-        runtime.getExecutor("let org = javet.package.org").executeVoid();
-        runtime.getExecutor("let java = javet.package.java").executeVoid();
-
-        // Setup required function
-        runtime
-            .getExecutor(
-                """
-                    const Module = require("module");
-                    const originalRequire = Module.prototype.require;
-
-                    Module.prototype.require = function () {
-                      if (arguments.length === 1 && typeof arguments[0] === "string" && (arguments[0].startsWith("org.") || arguments[0].startsWith("java.") || arguments[0].startsWith("net.") || arguments[0].startsWith("com."))) {
-                        return javet.package[arguments[0]];
-                      }
-
-                      return originalRequire.apply(this, arguments);
-                    };
-                    """)
-            .executeVoid();
-        // Handle uncaught exceptions in the runtime
-        runtime.getExecutor(
-            """
-                  process.on("uncaughtException", function (err) {
-                      console.error("Uncaught Exception:", err);
-                  });
-                """)
-            .executeVoid();
-        // Prevent exports and module from being undefined
-        runtime.getExecutor(
-            """
-                var exports = exports || {};
-                """).executeVoid();
-        runtime.getExecutor(
-            """
-                var module = module || {};
-                """).executeVoid();
-
-        this.runtimeCanBeClosed.put(path, new AtomicBoolean(false));
-
-        Thread thread = new Thread(() -> {
-          try {
-            runtime.getExecutor(workingDirectory.getIndexScriptContent()).executeVoid();
-            scriptIsUp.set(true);
-            plugin.getLogger().info("Script is up and running for path: " + path);
-            runtime.await();
-          } catch (Exception e) {
-            plugin.getLogger().severe("Failed to start runtime for path " + path + ": " + e.getMessage());
-            e.printStackTrace();
-            scriptIsUp.set(true);
-            this.runtimeCanBeClosed.get(path).set(true);
+        try (V8Runtime runtime = javetEngine.getV8Runtime()) {
+          if (runtime == null) {
+            throw new RuntimeException("Failed to create V8 runtime.");
           }
-        });
 
-        thread.start();
+          JavetProxyConverter proxyConverter = new JavetProxyConverter();
+          @SuppressWarnings("resource")
+          NodeRuntime nodeRuntime = (NodeRuntime) runtime;
+          WorkingDirectory workingDirectory = new WorkingDirectory(path);
+          JavetJVMInterceptor javetJVMInterceptor = new JavetJVMInterceptor(runtime);
+          Globals globals = new Globals(plugin);
+          AtomicBoolean scriptIsUp = new AtomicBoolean(false);
 
-        // Wait for the script to be up before proceeding
-        while (!scriptIsUp.get()) {
-          TimeUnit.MILLISECONDS.sleep(1000);
-        }
+          javetEngine.getConfig().setAllowEval(true);
+          nodeRuntime.getNodeModule(NodeModuleModule.class).setRequireRootDirectory(path.toFile());
+          // nodeRuntime.getNodeModule(NodeModuleProcess.class).setWorkingDirectory(path.toFile());
 
-        // Wait for the runtime to be closed
-        while (true) {
-          TimeUnit.MILLISECONDS.sleep(100);
+          runtime.setConverter(proxyConverter);
+          javetJVMInterceptor.register(runtime.getGlobalObject());
 
-          if (this.runtimeCanBeClosed.get(path).get()) {
-            plugin.getLogger().info("Closing runtime for path: " + path);
-            
-            globals.unregisterAllCommands();
-            globals.unregisterAllEvents();
-            runtime.close();
-            javetEngine.close();
-            runtime.resetContext();
-            javetEngine.resetContext();
-            this.javetEnginePool.releaseEngine(javetEngine);
-            this.runtimeCanBeClosed.remove(path);
+          runtime.getGlobalObject().set("PaperTS", globals);
 
-            return;
+          // Set the global objects for the runtime
+          runtime.getExecutor("let org = javet.package.org").executeVoid();
+          runtime.getExecutor("let java = javet.package.java").executeVoid();
+
+          // Setup required function
+          runtime
+              .getExecutor(
+                  """
+                      const Module = require("module");
+                      const originalRequire = Module.prototype.require;
+
+                      Module.prototype.require = function () {
+                        if (arguments.length === 1 && typeof arguments[0] === "string" && (arguments[0].startsWith("org.") || arguments[0].startsWith("java.") || arguments[0].startsWith("net.") || arguments[0].startsWith("com."))) {
+                          return javet.package[arguments[0]];
+                        }
+
+                        return originalRequire.apply(this, arguments);
+                      };
+                      """)
+              .executeVoid();
+          // Handle uncaught exceptions in the runtime
+          runtime.getExecutor(
+              """
+                    process.on("uncaughtException", function (err) {
+                        console.error("Uncaught Exception:", err);
+                    });
+                  """)
+              .executeVoid();
+          // Prevent exports and module from being undefined
+          runtime.getExecutor(
+              """
+                  var exports = exports || {};
+                  """).executeVoid();
+          runtime.getExecutor(
+              """
+                  var module = module || {};
+                  """).executeVoid();
+
+          this.runtimeCanBeClosed.put(path, new AtomicBoolean(false));
+
+          Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+              runtime.getExecutor(workingDirectory.getIndexScriptContent()).executeVoid();
+              scriptIsUp.set(true);
+              plugin.getLogger().info("Script is up and running for path: " + path);
+              runtime.await();
+            } catch (Exception e) {
+              plugin.getLogger().severe("Failed to start runtime for path " + path + ": " + e.getMessage());
+              e.printStackTrace();
+              scriptIsUp.set(true);
+              this.runtimeCanBeClosed.get(path).set(true);
+            }
+          });
+
+          // Wait for the script to be up before proceeding
+          while (!scriptIsUp.get()) {
+            TimeUnit.MILLISECONDS.sleep(1000);
+          }
+
+          // Wait for the runtime to be closed
+          while (true) {
+            TimeUnit.MILLISECONDS.sleep(100);
+
+            if (this.runtimeCanBeClosed.get(path).get()) {
+              plugin.getLogger().info("Closing runtime for path: " + path);
+
+              globals.unregisterAllCommands();
+              globals.unregisterAllEvents();
+
+              runtime.lowMemoryNotification();
+              System.gc();
+              System.runFinalization();
+
+              this.runtimeCanBeClosed.remove(path);
+
+              return;
+            }
           }
         }
       }
     }
+
   }
 
   /**
