@@ -70,7 +70,9 @@ PaperTS is a Paper Minecraft plugin that enables you to write Minecraft server p
 
 ### Note
 
-The root for the imports of nodee modules is the root of the working directory, so if your directory structure is like this:
+#### Importing Node Modules
+
+The root for the imports of node modules is the root of the working directory, so if your directory structure is like this:
 
 ```
 my-plugin/
@@ -97,6 +99,10 @@ Module.prototype.require = function () {
   return originalRequire.apply(this, arguments);
 };
 ```
+
+#### Get and Set methods
+
+According to the Javet wiki, Javet guesses the `get` and `set` methods. For example, `getName()` turns into `name`, and `setName(value)` becomes `name = value`. So, when using these methods, you should use the property-like syntax. For example, instead of calling `player.getName()`, you should use `player.name`. Similarly, to set a value, use the assignment syntax like `player.name = "NewName"`.
 
 ### PaperTS Global API
 
