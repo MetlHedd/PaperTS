@@ -329,3 +329,4 @@ Some projects that inspired PaperTS:
 - [Javet](https://github.com/caoccao/Javet)
 - [Custom Realms](https://github.com/customrealms)
 - [CraftJS](https://github.com/Dysfold/craftjs)
+- [ScriptCraft](https://github.com/walterhiggins/ScriptCraft)
