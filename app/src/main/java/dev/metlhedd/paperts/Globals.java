@@ -269,4 +269,26 @@ public class Globals {
 
     container.set(new NamespacedKey(this.plugin, key), PersistentDataType.STRING, value);
   }
+
+  /**
+   * Gets the JavaPlugin instance.
+   * @return The JavaPlugin instance.
+   */
+  public JavaPlugin getJavaPlugin() {
+    return this.plugin;
+  }
+
+  /**
+   * Creates a Runnable from a Function.
+   * @param function The function to convert to a Runnable.
+   * @return A Runnable that executes the function.
+   */
+  public Runnable createRunnable(Function<Void, Void> function) {
+    return new Runnable() {
+      @Override
+      public void run() {
+        function.apply(null);
+      }
+    };
+  }
 }
