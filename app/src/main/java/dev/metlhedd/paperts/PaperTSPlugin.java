@@ -69,7 +69,6 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
         .build();
 
     bukkitLibraryManager.loadLibrary(nodeJsLib);
-    
 
     File icuDataDir = getDataFolder().toPath().resolve("node-icu").toFile();
 
@@ -163,7 +162,7 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
     // Loop through directories in the data folder, and enable it as a module
     for (File file : serverRootFolder.listFiles()) {
       if (file.isDirectory() && new File(file, "package.json").exists()) {
-        new Thread(() -> {
+        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
           Path path = file.toPath();
 
           try {
@@ -173,7 +172,7 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
             e.printStackTrace();
           }
 
-        }).start();
+        });
       }
     }
   }
@@ -189,7 +188,7 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
    *                   pool's initRuntime method.
    */
   public void loadModule(String moduleName) {
-    new Thread(() -> {
+    Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
       try {
         Path modulePath = getDataFolder().toPath().resolve(moduleName);
 
@@ -198,8 +197,7 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
         getLogger().severe("Failed to load module " + moduleName + ": " + e.getMessage());
         e.printStackTrace();
       }
-
-    }).start();
+    });
   }
 
   /**
