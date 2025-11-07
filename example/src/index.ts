@@ -1,6 +1,10 @@
 import { Event } from "org.bukkit.event";
-import { PlayerJoinEvent } from "org.bukkit.event.player";
 import { CommandSender } from "org.bukkit.command";
+import { PersistentDataContainer } from "org.bukkit.persistence";
+import { List } from "java.util";
+import { Runnable } from "java.lang";
+import { JavaPlugin } from "org.bukkit.plugin.java";
+import { PlayerJoinEvent } from "org.bukkit.event.player";
 
 declare namespace PaperTS {
   export function registerEvent<T extends Event>(
@@ -16,6 +20,37 @@ declare namespace PaperTS {
     aliases: string[],
     executor: (sender: CommandSender, args: string[]) => void,
   ): void;
+
+  export function getPersistentContainerString(
+    key: string,
+    container: PersistentDataContainer,
+  ): string;
+
+  export function getPersistentContainerStringList(
+    key: string,
+    container: PersistentDataContainer,
+  ): string[];
+
+  export function hasKeyPersistentContainer(
+    key: string,
+    container: PersistentDataContainer,
+  ): boolean;
+
+  export function setPersistentContainerString(
+    key: string,
+    value: string,
+    container: PersistentDataContainer,
+  ): void;
+
+  export function setPersistentContainerStringList(
+    key: string,
+    value: List<String>,
+    container: PersistentDataContainer,
+  ): void;
+
+  export function getJavaPlugin(): JavaPlugin;
+
+  export function createRunnable(runnable: () => void): Runnable;
 }
 
 export class ServerModule {

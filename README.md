@@ -103,6 +103,13 @@ Module.prototype.require = function () {
 The following global API is available in your TypeScript/JavaScript code:
 
 ```ts
+import { Event } from "org.bukkit.event";
+import { CommandSender } from "org.bukkit.command";
+import { PersistentDataContainer } from "org.bukkit.persistence";
+import { List } from "java.util";
+import { Runnable } from "java.lang";
+import { JavaPlugin } from "org.bukkit.plugin.java";
+
 declare namespace PaperTS {
   export function registerEvent<T extends Event>(
     eventClass: { new (...args: any[]): T },
@@ -133,6 +140,10 @@ declare namespace PaperTS {
     value: string,
     container: PersistentDataContainer
   ): void;
+
+  export function getJavaPlugin(): JavaPlugin;
+
+  export function createRunnable(runnable: () => void): Runnable;
 }
 ```
 
