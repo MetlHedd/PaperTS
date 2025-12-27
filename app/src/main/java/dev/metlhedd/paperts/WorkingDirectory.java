@@ -22,6 +22,10 @@ public class WorkingDirectory {
    * The index script of the module, typically defined in package.json.
    */
   private String indexScript;
+  /**
+   * The run type of the module, defined in package.json.
+   */
+  private RunType runType;
 
   /**
    * The name of the package file, typically package.json.
@@ -44,21 +48,16 @@ public class WorkingDirectory {
   public WorkingDirectory(Path path) throws RuntimeException, IOException, JsonSyntaxException {
     this.path = path;
 
-    setIndexScriptFromPackageFile();
+    this.setupFromPackageFile();
   }
 
   /**
-   * Sets the index script from the package file.
-   * This method reads the package.json file and extracts the "main" field to set
-   * the index script.
-   *
-   * @throws RuntimeException    if the package file is not found or if there is
-   *                             an
-   *                             error reading it.
+   * Sets up the working directory from the package file.
+   * 
    * @throws IOException         if there is an error reading the package file.
    * @throws JsonSyntaxException if the package file is not a valid JSON.
    */
-  private void setIndexScriptFromPackageFile() throws RuntimeException, IOException, JsonSyntaxException {
+  private void setupFromPackageFile() throws IOException, JsonSyntaxException {
     File packageFile = path.resolve(packageFileName).toFile();
 
     if (!packageFile.exists()) {
@@ -72,6 +71,18 @@ public class WorkingDirectory {
       indexScript = jsonObject.get("main").getAsString();
     } else {
       throw new RuntimeException("No 'main' field found in package.json");
+    }
+
+    if (jsonObject.has("runType")) {
+      String runTypeString = jsonObject.get("runType").getAsString();
+
+      try {
+        this.runType = RunType.valueOf(runTypeString);
+      } catch (IllegalArgumentException e) {
+        throw new RuntimeException("Invalid 'runType' value in package.json: " + runTypeString);
+      }
+    } else {
+      this.runType = RunType.Synchronous; // Default run type
     }
   }
 
@@ -88,11 +99,30 @@ public class WorkingDirectory {
     return fileContent;
   }
 
+  /**
+   * Gets the path of the index script.
+   * 
+   * @return The path of the index script.
+   */
   public Path getIndexScriptPath() {
     return path.resolve(indexScript);
   }
 
+  /**
+   * Gets the path of the working directory.
+   * 
+   * @return The path of the working directory.
+   */
   public Path getPath() {
     return path;
+  }
+
+  /**
+   * Gets the run type of the module.
+   * 
+   * @return The run type of the module.
+   */
+  public RunType getRunType() {
+    return runType;
   }
 }
