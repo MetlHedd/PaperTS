@@ -162,17 +162,14 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
     // Loop through directories in the data folder, and enable it as a module
     for (File file : serverRootFolder.listFiles()) {
       if (file.isDirectory() && new File(file, "package.json").exists()) {
-        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
-          Path path = file.toPath();
+        Path path = file.toPath();
 
-          try {
-            this.pool.initRuntime(path);
-          } catch (IOException | JavetException | InterruptedException e) {
-            getLogger().severe("Failed to initialize module at " + path + ": " + e.getMessage());
-            e.printStackTrace();
-          }
-
-        });
+        try {
+          this.pool.initRuntime(path);
+        } catch (IOException | JavetException | InterruptedException e) {
+          getLogger().severe("Failed to initialize module at " + path + ": " + e.getMessage());
+          e.printStackTrace();
+        }
       }
     }
   }
@@ -188,16 +185,14 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
    *                   pool's initRuntime method.
    */
   public void loadModule(String moduleName) {
-    Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
-      try {
-        Path modulePath = getDataFolder().toPath().resolve(moduleName);
+    try {
+      Path modulePath = getDataFolder().toPath().resolve(moduleName);
 
-        this.pool.initRuntime(modulePath);
-      } catch (Exception e) {
-        getLogger().severe("Failed to load module " + moduleName + ": " + e.getMessage());
-        e.printStackTrace();
-      }
-    });
+      this.pool.initRuntime(modulePath);
+    } catch (Exception e) {
+      getLogger().severe("Failed to load module " + moduleName + ": " + e.getMessage());
+      e.printStackTrace();
+    }
   }
 
   /**
