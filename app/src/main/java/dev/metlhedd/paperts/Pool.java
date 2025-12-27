@@ -93,6 +93,7 @@ public class Pool {
    * @throws InterruptedException if the thread is interrupted while waiting for
    *                              the runtime to be ready.
    */
+  @SuppressWarnings("null")
   public void initRuntime(Path path)
       throws RuntimeException, IOException, JsonSyntaxException, JavetException, InterruptedException {
     try (IJavetEnginePool<V8Runtime> javetEnginePool = new JavetEnginePool<>()) {
@@ -169,7 +170,7 @@ public class Pool {
 
           this.runtimeCanBeClosed.put(path, new AtomicBoolean(false));
 
-          Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+          Runnable startRuntime = () -> {
             try {
               runtime.getExecutor(workingDirectory.getIndexScriptContent()).executeVoid();
               scriptIsUp.set(true);
@@ -181,7 +182,22 @@ public class Pool {
               scriptIsUp.set(true);
               this.runtimeCanBeClosed.get(path).set(true);
             }
-          });
+          };
+
+          switch (workingDirectory.getRunType()) {
+            case Synchronous:
+              startRuntime.run();
+              break;
+            case SynchronousOnNextTick:
+              Bukkit.getScheduler().runTask(plugin, startRuntime);
+              break;
+            case AsynchronousOnNextTick:
+              Bukkit.getScheduler().runTaskAsynchronously(plugin, startRuntime);
+              break;
+            case NewThread:
+              new Thread(startRuntime).start();
+              break;
+          }
 
           // Wait for the script to be up before proceeding
           while (!scriptIsUp.get()) {
@@ -199,6 +215,8 @@ public class Pool {
               globals.unregisterAllEvents();
 
               runtime.lowMemoryNotification();
+              runtime.resetContext();
+              runtime.resetIsolate();
               System.gc();
               System.runFinalization();
 
