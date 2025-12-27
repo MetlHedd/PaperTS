@@ -223,6 +223,7 @@ public class Globals {
    * @throws IllegalArgumentException if the container is null.
    * @return The string value associated with the key, or null if not found.
    */
+  @SuppressWarnings("null")
   public String getPersistentContainerString(String key, PersistentDataContainer container)
       throws IllegalArgumentException {
     if (container == null) {
