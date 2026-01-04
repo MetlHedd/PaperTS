@@ -164,12 +164,7 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
       if (file.isDirectory() && new File(file, "package.json").exists()) {
         Path path = file.toPath();
 
-        try {
-          this.pool.initRuntime(path);
-        } catch (IOException | JavetException | InterruptedException e) {
-          getLogger().severe("Failed to initialize module at " + path + ": " + e.getMessage());
-          e.printStackTrace();
-        }
+        this.initRuntimeNewThread(path);
       }
     }
   }
@@ -185,14 +180,21 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
    *                   pool's initRuntime method.
    */
   public void loadModule(String moduleName) {
-    try {
-      Path modulePath = getDataFolder().toPath().resolve(moduleName);
+    Path modulePath = getDataFolder().toPath().resolve(moduleName);
 
-      this.pool.initRuntime(modulePath);
-    } catch (Exception e) {
-      getLogger().severe("Failed to load module " + moduleName + ": " + e.getMessage());
-      e.printStackTrace();
-    }
+    this.initRuntimeNewThread(modulePath);
+  }
+
+  public void initRuntimeNewThread(Path modulePath) {
+    new Thread(() -> {
+      try {
+        this.pool.initRuntime(modulePath);
+
+      } catch (Exception e) {
+        getLogger().severe("Failed to initialize runtime at " + modulePath + ": " + e.getMessage());
+        e.printStackTrace();
+      }
+    }).start();
   }
 
   /**
