@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import com.caoccao.javet.enums.JSRuntimeType;
 import com.caoccao.javet.exceptions.JavetException;
@@ -101,12 +102,8 @@ public class Pool {
 
       try (IJavetEngine<V8Runtime> javetEngine = javetEnginePool.getEngine()) {
         if (javetEngine == null) {
-          throw new RuntimeException("Failed to get Javet engine from pool.");
+          throw new RuntimeException("Failed to create Javet engine.");
         }
-
-        // Set the runtime type
-
-        javetEngine.getConfig().setJSRuntimeType(this.runtimeType);
 
         try (V8Runtime runtime = javetEngine.getV8Runtime()) {
           if (runtime == null) {
@@ -114,16 +111,15 @@ public class Pool {
           }
 
           JavetProxyConverter proxyConverter = new JavetProxyConverter();
-          @SuppressWarnings("resource")
-          NodeRuntime nodeRuntime = (NodeRuntime) runtime;
           WorkingDirectory workingDirectory = new WorkingDirectory(path);
           JavetJVMInterceptor javetJVMInterceptor = new JavetJVMInterceptor(runtime);
           Globals globals = new Globals(plugin);
           AtomicBoolean scriptIsUp = new AtomicBoolean(false);
 
-          javetEngine.getConfig().setAllowEval(true);
-          nodeRuntime.getNodeModule(NodeModuleModule.class).setRequireRootDirectory(path.toFile());
-          // nodeRuntime.getNodeModule(NodeModuleProcess.class).setWorkingDirectory(path.toFile());
+          runtime.allowEval(true);
+          ((NodeRuntime) runtime).getNodeModule(NodeModuleModule.class).setRequireRootDirectory(path.toFile());
+          // ((NodeRuntime)
+          // runtime).getNodeModule(NodeModuleProcess.class).setWorkingDirectory(path.toFile());
 
           runtime.setConverter(proxyConverter);
           javetJVMInterceptor.register(runtime.getGlobalObject());
@@ -170,14 +166,19 @@ public class Pool {
 
           this.runtimeCanBeClosed.put(path, new AtomicBoolean(false));
 
+          BukkitTask bukkitTask = null;
+          Thread thread = null;
+
           Runnable startRuntime = () -> {
             try {
               runtime.getExecutor(workingDirectory.getIndexScriptContent()).executeVoid();
               scriptIsUp.set(true);
-              plugin.getLogger().info("Script is up and running for path: " + path);
+              plugin.getLogger().info("Script is up and running for path " + path + " and run type: "
+                  + workingDirectory.getRunType().name());
               runtime.await();
             } catch (Exception e) {
-              plugin.getLogger().severe("Failed to start runtime for path " + path + ": " + e.getMessage());
+              plugin.getLogger().severe("Failed to start runtime for path " + path + " and run type: "
+                  + workingDirectory.getRunType().name() + ": " + e.getMessage());
               e.printStackTrace();
               scriptIsUp.set(true);
               this.runtimeCanBeClosed.get(path).set(true);
@@ -185,17 +186,15 @@ public class Pool {
           };
 
           switch (workingDirectory.getRunType()) {
-            case Synchronous:
-              startRuntime.run();
-              break;
             case SynchronousOnNextTick:
-              Bukkit.getScheduler().runTask(plugin, startRuntime);
+              bukkitTask = Bukkit.getScheduler().runTask(plugin, startRuntime);
               break;
             case AsynchronousOnNextTick:
-              Bukkit.getScheduler().runTaskAsynchronously(plugin, startRuntime);
+              bukkitTask = Bukkit.getScheduler().runTaskAsynchronously(plugin, startRuntime);
               break;
             case NewThread:
-              new Thread(startRuntime).start();
+              thread = new Thread(startRuntime);
+              thread.start();
               break;
           }
 
@@ -210,25 +209,50 @@ public class Pool {
 
             if (this.runtimeCanBeClosed.get(path).get()) {
               plugin.getLogger().info("Closing runtime for path: " + path);
-
-              globals.unregisterAllCommands();
-              globals.unregisterAllEvents();
-
-              runtime.lowMemoryNotification();
-              runtime.resetContext();
-              runtime.resetIsolate();
-              System.gc();
-              System.runFinalization();
-
-              this.runtimeCanBeClosed.remove(path);
-
-              return;
+              break;
             }
           }
+
+          this.runtimeCanBeClosed.remove(path);
+
+          globals.unregisterAllCommands();
+          globals.unregisterAllEvents();
+
+          if (bukkitTask != null) {
+            bukkitTask.cancel();
+          } else if (thread != null) {
+            thread.interrupt();
+          }
+
+          // Add cleanup logic for the runtime
+          runtime.getExecutor(
+              """
+                  try {
+                    cleanup();
+                  } catch (err) {
+                    // Just ignore cleanup errors
+                  }
+                  """).executeVoid();
+          runtime.getExecutor("PaperTS = undefined;").executeVoid();
+          javetJVMInterceptor.unregister(runtime.getGlobalObject());
+
+          // Dispose of the runtime explicitly
+          runtime.lowMemoryNotification();
+          ((NodeRuntime) runtime).setStopping(true);
+          runtime.terminateExecution();
+          runtime.resetContext();
+          System.gc();
+          System.runFinalization();
         }
+
+        System.gc();
+        System.runFinalization();
+        javetEngine.sendGCNotification();
       }
     }
 
+    System.gc();
+    System.runFinalization();
   }
 
   /**
