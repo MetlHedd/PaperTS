@@ -312,6 +312,26 @@ PaperTS.registerCommand(
 
 PaperTS supports internationalization (i18n) through the Node.js runtime, enabling it may lead to more compatible behavior with some Node.js modules. To enable i18n, create a folder name `node-icu` in the data folder of the plugin (normally `plugins/PaperTS/node-icu`) and place the ICU data files there. You can download the ICU data files from any actions run of the [Javet repository](https://github.com/caoccao/Javet). The plugin will automatically detect the presence of the `node-icu` folder and enable i18n support.
 
+### Setting up the Run Type
+
+You can configure how the script runs by specifying the `runType` field in the `package.json` of your module. This determines whether the script executes synchronously or asynchronously, and on which thread. Below is an example configuration:
+
+```json
+{
+  "runType": "SynchronousOnNextTick"
+}
+```
+
+The available options for `runType` are:
+
+- **`SynchronousOnNextTick`**: Executes the script synchronously on the next server tick.
+- **`AsynchronousOnNextTick`**: Executes the script asynchronously on the next server tick.
+- **`NewThread`**: Executes the script asynchronously on a separate thread.
+
+### Resource Cleanup
+
+When unloading or reloading a module, PaperTS attempts to clean up resources by calling a `cleanup` function if it exists in the module's main script. This function should handle any necessary cleanup tasks, such as closing database connections, closing a http server, or freeing up memory.
+
 ## Plugin Commands
 
 You can use the following commands to manage your PaperTS modules:
