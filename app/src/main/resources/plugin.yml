@@ -1,4 +1,4 @@
 name: PaperTS
-version: 1.4.0
+version: 1.5.0
 main: dev.metlhedd.paperts.PaperTSPlugin
 api-version: 1.21.4 # This should match the Paper API version you are using, adjust as necessary. The version is automatically updated by the build workflow.
