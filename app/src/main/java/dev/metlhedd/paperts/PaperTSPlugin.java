@@ -65,7 +65,7 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
     Library nodeJsLib = Library.builder()
         .groupId("com{}caoccao{}javet")
         .artifactId(nodeJsPackage)
-        .version("5.0.1")
+        .version("5.0.3")
         .build();
 
     bukkitLibraryManager.loadLibrary(nodeJsLib);
@@ -78,7 +78,7 @@ public class PaperTSPlugin extends JavaPlugin implements Listener {
       Library nodeI18nJsLib = Library.builder()
           .groupId("com{}caoccao{}javet")
           .artifactId(nodeJsPackage + "-i18n")
-          .version("5.0.1")
+          .version("5.0.3")
           .build();
 
       bukkitLibraryManager.loadLibrary(nodeI18nJsLib);
