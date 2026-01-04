@@ -82,7 +82,7 @@ public class WorkingDirectory {
         throw new RuntimeException("Invalid 'runType' value in package.json: " + runTypeString);
       }
     } else {
-      this.runType = RunType.Synchronous; // Default run type
+      this.runType = RunType.SynchronousOnNextTick; // Default run type
     }
   }
 
