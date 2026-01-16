@@ -307,6 +307,107 @@ PaperTS.registerCommand(
   server.helloCommand.bind(server),
 );
 ```
+### Java Bridge API
+
+
+
+PaperTS provides a global `Java` object that allows you to interact with Java classes, enums, and static methods directly from TypeScript/JavaScript. This is useful when you need to access Java functionality that isn't directly exposed through the PaperTS API.
+
+
+
+#### Available Methods
+To use the Java Bridge with full TypeScript support, create a `javaBridge.ts` file in your project and add the following type declarations:
+```ts
+declare const Java: {
+   /**
+    * Get an enum value by class name and value name.
+    */
+   enumValue<T = unknown>(className: string, valueName: string): T;
+
+   /**
+    * Get all values of an enum.
+    */
+   enumValues<T = unknown>(className: string): T[];
+
+   /**
+    * Create a new instance of a Java class.
+    */
+   newInstance<T = unknown>(className: string, ...args: unknown[]): T;
+
+   /**
+    * Call a static method on a Java class.
+    */
+   callStatic<T = unknown>(
+           className: string,
+           methodName: string,
+           ...args: unknown[]
+   ): T;
+
+   /**
+    * Get a static field value from a Java class.
+    */
+   getStatic<T = unknown>(className: string, fieldName: string): T;
+
+   /**
+    * Check if a Java class exists.
+    */
+   classExists(className: string): boolean;
+};
+
+```
+
+#### Usage Examples
+
+##### Working with Enums
+```ts
+const player = event.getPlayer();
+const allGameModes: any = Java.enumValues("org.bukkit.GameMode");
+player.sendMessage(`Game mode: ${allGameModes.toString()}`);
+```
+
+##### Creating Java Objects
+```ts 
+// Create a new Location
+const world = Java.callStatic("org.bukkit.Bukkit", "getWorld", "world");
+const location = Java.newInstance("org.bukkit.Location", world, 100, 64, 100);
+player.teleport(location);
+
+```
+
+##### Calling Static Methods
+```ts 
+Java.callStatic("org.bukkit.Bukkit", "broadcastMessage", "Hello from PaperTS!");
+
+const onlinePlayer: any[] = Java.callStatic(
+        "org.bukkit.Bukkit",
+        "getOnlinePlayers"
+);
+onlinePlayer.forEach((player) => player.sendMessage("Hi everyone"));
+
+```
+##### Checking Class Existence
+```ts 
+// Check if a class exists before using it
+if (Java.classExists("com.example.CustomPlugin")) {
+   const customValue = Java.callStatic("com.example.CustomPlugin", "getValue");
+   player.sendMessage(`Custom plugin value: ${customValue}`);
+} else {
+   player.sendMessage("Custom plugin not found");
+}
+
+// Useful for optional integrations
+const hasVault = Java.classExists("net.milkbowl.vault.economy.Economy");
+if (hasVault) {
+   // Initialize Vault integration
+}
+```
+##### Getting Static Fields
+
+```ts
+// Get a static constant
+const legacyPrefix = Java.getStatic("org.bukkit.Material", "LEGACY_PREFIX");;
+player.sendMessage(legacyPrefix);
+```
 
 ### Internationalization (i18n)
 

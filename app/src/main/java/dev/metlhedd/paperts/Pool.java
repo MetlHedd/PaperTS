@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.bukkit.Bukkit;
+import org.bukkit.*;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -125,6 +125,11 @@ public class Pool {
           javetJVMInterceptor.register(runtime.getGlobalObject());
 
           runtime.getGlobalObject().set("PaperTS", globals);
+          runtime.getGlobalObject().set("TreeType", TreeType.class);
+          runtime.getGlobalObject().set("Material", Material.class);
+          runtime.getGlobalObject().set("GameMode", GameMode.class);
+          runtime.getGlobalObject().set("Difficulty", Difficulty.class);
+          runtime.getGlobalObject().set("Java", new JavaBridge());
 
           // Set the global objects for the runtime
           runtime.getExecutor("let org = javet.package.org").executeVoid();
