@@ -401,6 +401,13 @@ if (hasVault) {
    // Initialize Vault integration
 }
 ```
+##### Getting Static Fields
+
+```ts
+// Get a static constant
+const legacyPrefix = Java.getStatic("org.bukkit.Material", "LEGACY_PREFIX");;
+player.sendMessage(legacyPrefix);
+```
 
 ### Internationalization (i18n)
 
